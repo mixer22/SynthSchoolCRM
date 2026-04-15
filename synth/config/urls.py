@@ -1,6 +1,6 @@
 from django.urls import path
 from apps.crm.admin import admin_site
-from apps.crm.views import user_login, user_logout, dashboard
+from apps.crm.views.main_views import user_login, user_logout, dashboard
 
 urlpatterns = [
     path('', dashboard, name='dashboard'),

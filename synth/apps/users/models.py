@@ -12,12 +12,12 @@ class User(AbstractUser):
     # ====== Основные данные ======
     age = models.PositiveIntegerField(null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
-
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')
+    parent_name = models.CharField(max_length=100, blank=True)
+    parent_phone = models.CharField(max_length=20, blank=True)
 
     # ====== CRM-ДАННЫЕ ======
     notes = models.TextField(blank=True, null=True)  # заметки преподавателя
-
     created_at = models.DateTimeField(auto_now_add=True)
 
     def is_student(self):

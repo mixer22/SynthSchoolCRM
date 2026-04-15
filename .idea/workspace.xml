@@ -5,7 +5,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="165d161f-a06e-49f1-b0ee-3cc307a2112d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/synth/apps/crm/admin_site.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/synth/apps/crm/services/coins.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/synth/apps/crm/services/groups.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/synth/apps/crm/views/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/synth/apps/crm/views/admin_views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/crm/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/crm/admin.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/crm/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/crm/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/crm/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/dashboard/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/dashboard/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/dashboard/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/schedule/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/schedule/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/schedule/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/students/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/students/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/students/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/students/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/students/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/users/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/users/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/users/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/users/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/apps/users/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/config/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/config/urls.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -15,26 +39,26 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="HTML File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "mixer22"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;mixer22&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/mixer22/SynthSchoolCRM.git",
-    "accountId": "f05aeace-3e2a-47e8-8247-fc20e45cc8d2"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/mixer22/SynthSchoolCRM.git&quot;,
+    &quot;accountId&quot;: &quot;f05aeace-3e2a-47e8-8247-fc20e45cc8d2&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 5
 }</component>
@@ -62,6 +86,8 @@
       <recent name="$PROJECT_DIR$/synth/templates/auth" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/synth/apps/crm/views" />
+      <recent name="$PROJECT_DIR$/synth/apps/crm/main_views" />
       <recent name="$PROJECT_DIR$/synth/config" />
       <recent name="$PROJECT_DIR$/synth/apps" />
       <recent name="$PROJECT_DIR$/synth" />

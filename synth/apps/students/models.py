@@ -6,23 +6,14 @@ from ..schedule.models import Group
 
 User = get_user_model()
 
-
-class Student(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
-    parent_name = models.CharField(max_length=100, blank=True)
-    parent_phone = models.CharField(max_length=20, blank=True)
-
-    def __str__(self):
-        return self.user.username
-
-
 class Enrollment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('user', 'group')
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'group'], name='unique_enrollment')
+        ]
         verbose_name = "Запись"
         verbose_name_plural = "Записи"
 
