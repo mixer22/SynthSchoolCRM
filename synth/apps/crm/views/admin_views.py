@@ -30,7 +30,10 @@ def group_view(admin_site, request, group_id):
     group = get_object_or_404(Group, id=group_id)
 
     enrolled_users = User.objects.filter(enrollment__group=group)
-    all_users = User.objects.all()
+
+    all_users = User.objects.filter(role='student').exclude(
+        id__in=enrolled_users.values_list('id', flat=True)
+    )
 
     return TemplateResponse(request, "admin/group_page.html", {
         **admin_site.each_context(request),

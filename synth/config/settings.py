@@ -45,31 +45,41 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-JAZZMIN_SETTINGS = {"apps_label_first": False,
-                    "site_title": "СИНТ CRM",
-                    "site_header": "Панель школы",
-                    "site_brand": "СИНТ",
-        "custom_links": {
-            "core": [{
-                "name": "Расписание",
+JAZZMIN_SETTINGS = {
+    "site_title": "SINT CRM",
+    "site_header": "СИНТ",
+    "site_brand": "СИНТ",
+
+    "navigation_expanded": True,
+
+    "custom_links": {
+        "": [
+            {
+                "name": "📅 Расписание",
                 "url": "/admin/schedule/",
                 "icon": "fas fa-calendar",
-            }]
-        },
-        "order_with_respect_to": [
-        "core.user",
-        "core.group",
-        "core.lesson",
-        "core.enrollment",
-        "core.coinbalance",
-        "core.transaction",
-        ],
-        "icons": {
-            "core.user": "fas fa-user",
-            "core.group": "fas fa-users",
-            "core.lesson": "fas fa-calendar",
-            "core.coinbalance": "fas fa-coins",
-        }
+            },
+            {
+                "name": "👥 Группы",
+                "url": "/admin/schedule/group/",
+                "icon": "fas fa-users",
+            },
+            {
+                "name": "👤 Пользователи",
+                "url": "/admin/users/user/",
+                "icon": "fas fa-user",
+            },
+        ]
+    },
+
+    "hide_models": [
+        "schedule.lesson",
+        "schedule.group",
+        "students.coinbalance",
+        "students.transaction",
+        "students.enrollment",
+        "users.user"
+    ],
 }
 
 ROOT_URLCONF = 'config.urls'
