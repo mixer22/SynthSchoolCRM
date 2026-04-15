@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Кабинет | СИНТ</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at top, #eef2ff, #ffffff);
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .hello {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .logout {
+            text-decoration: none;
+            color: #ef4444;
+            font-weight: 500;
+        }
+
+        /* CARDS */
+        .card {
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .title {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        /* PROFILE */
+        .profile p {
+            margin: 6px 0;
+            font-size: 15px;
+        }
+
+        /* BALANCE */
+        .balance {
+            font-size: 36px;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .coins {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        /* SCHEDULE */
+        .schedule {
+            margin-top: 20px;
+        }
+
+        .lesson {
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+            background: #f9fafb;
+            margin-bottom: 10px;
+        }
+
+        .empty {
+            color: #9ca3af;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="hello">
+           Привет, {{ user.first_name|default:user.username }} 👋
+        </div>
+
+        <a href="/logout/" class="logout">Выйти</a>
+    </div>
+
+    <!-- TOP -->
+    <div class="grid">
+
+        <!-- PROFILE -->
+        <div class="card profile">
+            <div class="title">Данные профиля</div>
+
+            <p><b>Имя:</b> {{ user.first_name|default:"—" }}</p>
+            <p><b>Фамилия:</b> {{ user.last_name|default:"—" }}</p>
+            <p><b>Телефон:</b> {{ user.phone|default:"—" }}</p>
+        </div>
+
+        <!-- BALANCE -->
+        <div class="card">
+            <div class="title">Монетки</div>
+
+            <div class="balance">{{ balance }}</div>
+            <div class="coins">монеток</div>
+        </div>
+
+    </div>
+
+    <!-- SCHEDULE -->
+    <div class="card schedule">
+        <div class="title">Расписание</div>
+
+        {% for l in lessons %}
+            <div class="lesson">
+                {{ l.get_weekday_display }} • {{ l.time|time:"H:i" }}
+            </div>
+        {% empty %}
+            <div class="empty">Пока нет занятий</div>
+        {% endfor %}
+    </div>
+
+</div>
+
+</body>
+</html>

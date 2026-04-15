@@ -1,0 +1,266 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+.container {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 10px;
+    font-family: Arial, sans-serif;
+}
+
+/* HEADER */
+h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.subtitle {
+    color: #6b7280;
+    margin-bottom: 25px;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* CARDS */
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    border: 1px solid #eef2f7;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+}
+
+/* TEXT */
+.title {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.row {
+    margin: 6px 0;
+    font-size: 15px;
+}
+
+/* GROUPS */
+.groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.group {
+    padding: 7px 12px;
+    background: #6366f1;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.group:hover {
+    background: #4f46e5;
+}
+
+/* COINS */
+.coins {
+    font-size: 36px;
+    font-weight: 700;
+    color: #4f46e5;
+    margin: 10px 0;
+}
+
+/* BUTTON */
+.btn {
+    display: inline-block;
+    padding: 10px 14px;
+    background: #10b981;
+    color: white;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 13px;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background: #059669;
+}
+
+/* MUTED */
+.muted {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.modal-content {
+    background: white;
+    padding: 22px;
+    border-radius: 16px;
+    width: 340px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    outline: none;
+}
+
+.modal-content button {
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.modal-content button[type="submit"] {
+    background: #6366f1;
+    color: white;
+    flex: 1;
+}
+
+.modal-content .cancel {
+    background: #e5e7eb;
+    flex: 1;
+}
+</style>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <h1>👤 {{ user_obj.username }}</h1>
+    <div class="subtitle">Профиль ученика</div>
+
+    <!-- GRID -->
+    <div class="grid">
+
+        <!-- INFO -->
+        <div class="card">
+            <div class="title">Основная информация</div>
+
+            <div class="row"><b>Имя:</b> {{ user_obj.first_name|default:"—" }}</div>
+            <div class="row"><b>Фамилия:</b> {{ user_obj.last_name|default:"—" }}</div>
+            <div class="row"><b>Email:</b> {{ user_obj.email|default:"—" }}</div>
+            <div class="row"><b>Возраст:</b> {{ user_obj.age|default:"—" }}</div>
+            <div class="row"><b>Телефон:</b> {{ user_obj.phone|default:"—" }}</div>
+            <div class="row"><b>Роль:</b> {{ user_obj.role|default:"—" }}</div>
+        </div>
+
+        <!-- NOTES -->
+        <div class="card">
+            <div class="title">Заметки</div>
+
+            {% if user_obj.notes %}
+                <div style="font-size:14px; line-height:1.4;">
+                    {{ user_obj.notes }}
+                </div>
+            {% else %}
+                <div class="muted">Нет заметок</div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- GROUPS -->
+    <div class="card" style="margin-top:20px;">
+        <div class="title">Группы</div>
+
+        {% if groups %}
+            <div class="groups">
+                {% for group in groups %}
+                    <a href="/admin/group/{{ group.id }}/" class="group">
+                        {{ group.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="muted">Нет групп</div>
+        {% endif %}
+    </div>
+
+    <!-- COINS -->
+    <div class="card" style="margin-top:20px;">
+        <div class="title">Баланс коинов</div>
+
+        <div class="coins">
+            {{ balance|default:"0" }} 🪙
+        </div>
+
+        <a href="#" class="btn" onclick="openCoinsModal()">
+            ➕ Добавить коины
+        </a>
+
+        <div class="muted" style="margin-top:10px;">
+            внутренняя валюта ученика
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div id="coinsModal" class="modal">
+
+    <div class="modal-content">
+
+        <h3 style="margin-bottom:10px;">Добавить коины</h3>
+        <div class="muted">{{ user_obj.username }}</div>
+
+        <form method="post" action="/admin/user/{{ user_obj.id }}/add-coins/">
+            {% csrf_token %}
+
+            <input type="number" name="amount" placeholder="Количество" required>
+
+            <div style="display:flex; gap:10px; margin-top:12px;">
+                <button type="submit">Добавить</button>
+                <button type="button" class="cancel" onclick="closeCoinsModal()">Отмена</button>
+            </div>
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+function openCoinsModal() {
+    document.getElementById('coinsModal').style.display = 'flex';
+}
+
+function closeCoinsModal() {
+    document.getElementById('coinsModal').style.display = 'none';
+}
+
+window.onclick = function(e) {
+    const modal = document.getElementById('coinsModal');
+    if (e.target === modal) {
+        closeCoinsModal();
+    }
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends "admin/base_site.html" %}
+{% load custom_tags %}
+
+{% block content %}
+
+<style>
+    h1 {
+        margin-bottom: 20px;
+    }
+
+    .schedule-wrapper {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 6px;
+    }
+
+    th {
+        font-size: 14px;
+        color: #6b7280;
+        font-weight: 600;
+        padding: 10px 0;
+    }
+
+    td {
+        background: #f9fafb;
+        border-radius: 10px;
+        height: 80px;
+        position: relative;
+        transition: 0.2s;
+    }
+
+    td:hover {
+        background: #eef2ff;
+    }
+
+    .time {
+        font-weight: 600;
+        color: #374151;
+        font-size: 14px;
+    }
+
+    .cell-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    .group-card {
+        display: inline-block;
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: white;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+
+    .group-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(99,102,241,0.3);
+    }
+
+    .add-btn {
+        font-size: 22px;
+        color: #c7c9d1;
+        text-decoration: none;
+        transition: 0.2s;
+    }
+
+    .add-btn:hover {
+        color: #6366f1;
+        transform: scale(1.2);
+    }
+
+    .header-row th:first-child {
+        text-align: left;
+        padding-left: 10px;
+    }
+    .group-wrapper {
+    position: relative;
+    display: inline-block;
+    }
+
+    .delete-btn {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #ef4444;
+        color: white;
+        font-size: 12px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 18px;
+        text-decoration: none;
+        opacity: 0;
+        transition: 0.2s;
+    }
+
+    .group-wrapper:hover .delete-btn {
+        opacity: 1;
+    }
+
+    .delete-btn:hover {
+        background: #dc2626;
+    }
+
+</style>
+
+<h1>📅 Расписание</h1>
+
+<div class="schedule-wrapper">
+
+<table>
+
+    <!-- HEADER -->
+    <tr class="header-row">
+        <th>Время</th>
+        {% for day in days %}
+            <th>{{ day.1 }}</th>
+        {% endfor %}
+    </tr>
+
+    <!-- ROWS -->
+    {% for t in time_slots %}
+    <tr>
+
+        <!-- TIME -->
+        <td class="time">
+            {{ t.time|time:"H:i" }}
+        </td>
+
+        <!-- DAYS -->
+        {% for day in days %}
+        <td>
+
+            <div class="cell-content">
+
+                {% with key=day.0|stringformat:"s"|add:"_"|add:t.key %}
+                {% with lesson=schedule_map|get_item:key %}
+
+                    {% if lesson %}
+                        <div class="group-wrapper">
+                            <a href="/admin/group/{{ lesson.group.id }}/" class="group-card">
+                                {{ lesson.group.name }}
+                            </a>
+
+                            <a href="/admin/lesson/{{ lesson.id }}/delete/"
+                               class="delete-btn"
+                               onclick="return confirm('Удалить занятие?')">
+                                ×
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="/admin/schedule/lesson/add/?weekday={{ day.0 }}&time={{ t.time|time:'H:i' }}"
+                           class="add-btn">
+                            ＋
+                        </a>
+                    {% endif %}
+
+                {% endwith %}
+                {% endwith %}
+
+            </div>
+
+        </td>
+        {% endfor %}
+
+    </tr>
+    {% endfor %}
+
+</table>
+
+</div>
+
+{% endblock %}

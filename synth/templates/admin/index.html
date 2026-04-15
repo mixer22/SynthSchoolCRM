@@ -1,0 +1,111 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    padding: 0 10px;
+    font-family: Arial, sans-serif;
+}
+
+/* HEADER */
+h1 {
+    font-size: 30px;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    color: #6b7280;
+    margin-bottom: 25px;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+/* CARD BUTTONS */
+.card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+
+    padding: 22px;
+    border-radius: 16px;
+    text-decoration: none;
+
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+
+    transition: 0.2s;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+/* COLORS */
+.blue { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+.cyan { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+
+/* ICON STYLE */
+.icon {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.label {
+    font-size: 18px;
+}
+
+.desc {
+    font-size: 13px;
+    opacity: 0.8;
+    margin-top: 6px;
+    font-weight: 400;
+}
+</style>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <h1>Панель управления школой</h1>
+    <div class="subtitle">Управление учениками, группами и расписанием</div>
+
+    <!-- GRID -->
+    <div class="grid">
+
+        <!-- Расписание -->
+        <a href="/admin/schedule/" class="card blue">
+            <div class="icon">📅</div>
+            <div class="label">Расписание</div>
+            <div class="desc">Управление занятиями и слотами</div>
+        </a>
+
+        <!-- Группа -->
+        <a href="/admin/schedule/group/add/" class="card green">
+            <div class="icon">➕</div>
+            <div class="label">Создать группу</div>
+            <div class="desc">Добавление новых учебных групп</div>
+        </a>
+
+        <!-- Пользователь -->
+        <a href="/admin/users/user/add/" class="card cyan">
+            <div class="icon">👤</div>
+            <div class="label">Добавить ученика</div>
+            <div class="desc">Регистрация нового ученика</div>
+        </a>
+
+    </div>
+
+</div>
+
+{% endblock %}

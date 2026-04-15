@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Вход | СИНТ</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at 20% 20%, #eef2ff, #ffffff);
+            color: #111827;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 20px;
+            width: 340px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #6366f1;
+            letter-spacing: 1px;
+            font-size: 14px;
+        }
+
+        h1 {
+            margin-bottom: 25px;
+            font-size: 26px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 12px;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            color: #111827;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        input:focus {
+            border: 1px solid #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+            background: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(99,102,241,0.25);
+        }
+
+        .error {
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #991b1b;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #6b7280;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <div class="logo">СИНТ</div>
+
+    <h1>Вход в личный кабинет</h1>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="input-group">
+            <input name="username" placeholder="Логин" required>
+        </div>
+
+        <div class="input-group">
+            <input name="password" type="password" placeholder="Пароль" required>
+        </div>
+
+        <button type="submit">Войти</button>
+    </form>
+
+    <div class="footer">
+        Школа программирования и робототехники
+    </div>
+
+</div>
+
+</body>
+</html>

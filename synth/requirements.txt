@@ -1,0 +1,8 @@
+Django==6.0.4
+django-jazzmin==3.0.4
+
+python-dotenv==1.0.1
+
+gunicorn==22.0.0
+
+whitenoise==6.7.0
