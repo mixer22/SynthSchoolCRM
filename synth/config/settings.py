@@ -55,18 +55,18 @@ JAZZMIN_SETTINGS = {
     "custom_links": {
         "": [
             {
-                "name": "📅 Расписание",
+                "name": "Расписание",
                 "url": "/admin/schedule/",
                 "icon": "fas fa-calendar",
             },
             {
-                "name": "👥 Группы",
-                "url": "/admin/schedule/group/",
+                "name": "Группы",
+                "url": "/admin/groups/",
                 "icon": "fas fa-users",
             },
             {
-                "name": "👤 Пользователи",
-                "url": "/admin/users/user/",
+                "name": "Ученики",
+                "url": "/admin/students/",
                 "icon": "fas fa-user",
             },
         ]

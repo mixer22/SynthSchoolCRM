@@ -1,0 +1,117 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+{% load custom_tags %}
+
+<style>
+.container {
+    max-width: 1100px;
+    margin: 20px auto;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    border: 1px solid #f1f5f9;
+    text-decoration: none;
+    color: inherit;
+    transition: 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+}
+
+.group-name {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.meta {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    background: #6366f1;
+    color: white;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-top: 8px;
+}
+</style>
+
+    <div class="container">
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+
+        <h1>👥 Группы</h1>
+
+        <a href="/admin/schedule/group/add/" style="
+            padding:10px 16px;
+            background:#22c55e;
+            color:white;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:600;
+            font-size:14px;
+        ">
+            ➕ Новая группа
+        </a>
+
+    </div>
+
+    <div class="grid">
+
+        {% for group in groups %}
+            <a href="/admin/group/{{ group.id }}/" class="card">
+
+                <div class="group-name">
+                    {{ group.name }}
+                </div>
+
+                <div class="meta">
+                    👥 {{ group.students_count }} учеников
+                </div>
+
+                {% with lesson=lesson_map|get_item:group.id %}
+                    {% if lesson %}
+                        <div class="meta">
+                            📅 {{ lesson.get_weekday_display }}
+                        </div>
+
+                        <div class="badge">
+                            ⏰ {{ lesson.time|time:"H:i" }}
+                        </div>
+                    {% else %}
+                        <div class="meta">Нет занятий</div>
+                    {% endif %}
+                {% endwith %}
+
+            </a>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

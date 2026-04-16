@@ -1,0 +1,149 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+}
+
+/* HEADER */
+h1 { margin-bottom: 10px; }
+
+/* FILTERS */
+.filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.filters select, .filters button {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+/* TABLE */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.table th, .table td {
+    padding: 14px;
+    text-align: left;
+}
+
+.table th {
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: 13px;
+}
+
+.table tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: 0.2s;
+}
+
+.table tr:hover {
+    background: #f9fafb;
+}
+
+/* LINK */
+.name {
+    font-weight: 600;
+    color: #111827;
+    text-decoration: none;
+}
+
+.name:hover {
+    color: #6366f1;
+}
+
+.muted {
+    color: #9ca3af;
+}
+</style>
+
+<div class="container">
+
+    <h1>👤 Ученики</h1>
+
+    <!-- ФИЛЬТРЫ -->
+    <form method="get" class="filters">
+
+        <!-- возраст -->
+        <select name="age" onchange="this.form.submit()">
+            <option value="">Возраст</option>
+            {% for i in ages %}
+                <option value="{{ i }}" {% if selected_age == i|stringformat:"s" %}selected{% endif %}>
+                    {{ i }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <!-- группа -->
+        <select name="group" onchange="this.form.submit()">
+            <option value="">Группа</option>
+            {% for g in groups %}
+                <option value="{{ g.id }}" {% if selected_group == g.id|stringformat:"s" %}selected{% endif %}>
+                    {{ g.name }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Фильтр</button>
+
+    </form>
+
+    <!-- СПИСОК -->
+    <table class="table">
+
+        <tr>
+            <th>Имя</th>
+            <th>Возраст</th>
+            <th>Телефон родителя</th>
+            <th>Группа</th>
+        </tr>
+
+        {% for student in students %}
+        <tr>
+            <td>
+                <a href="/admin/user/{{ student.id }}/" class="name">
+                    {{ student.first_name }} {{ student.last_name }}
+                </a>
+            </td>
+
+            <td>{{ student.age|default:"—" }}</td>
+
+            <td>
+                {% if student.student %}
+                    {{ student.student_profile.parent_phone|default:"—" }}
+                {% else %}
+                    <span class="muted">—</span>
+                {% endif %}
+            </td>
+
+            <td>
+                {% for e in student.enrollment_set.all %}
+                    {{ e.group.name }}{% if not forloop.last %}, {% endif %}
+                {% empty %}
+                    <span class="muted">—</span>
+                {% endfor %}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" class="muted">Нет учеников</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</div>
+
+{% endblock %}

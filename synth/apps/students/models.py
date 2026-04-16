@@ -6,6 +6,16 @@ from ..schedule.models import Group
 
 User = get_user_model()
 
+class Student(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="student_profile"  # 🔥 ВАЖНО
+    )
+
+    parent_name = models.CharField(max_length=100, blank=True)
+    parent_phone = models.CharField(max_length=20, blank=True)
+
 class Enrollment(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)

@@ -48,7 +48,8 @@ h1 {
 }
 
 .card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.12);
 }
 
 /* COLORS */
@@ -74,37 +75,29 @@ h1 {
 }
 </style>
 
-<div class="container">
+<!-- GRID -->
+<div class="grid">
 
-    <!-- HEADER -->
-    <h1>Панель управления школой</h1>
-    <div class="subtitle">Управление учениками, группами и расписанием</div>
+    <!-- Расписание -->
+    <a href="/admin/schedule/" class="card blue">
+        <div class="icon">📅</div>
+        <div class="label">Расписание</div>
+        <div class="desc">Все занятия и временные слоты</div>
+    </a>
 
-    <!-- GRID -->
-    <div class="grid">
+    <!-- Группы -->
+    <a href="/admin/groups/" class="card green">
+        <div class="icon">👥</div>
+        <div class="label">Группы</div>
+        <div class="desc">Список групп и управление учениками</div>
+    </a>
 
-        <!-- Расписание -->
-        <a href="/admin/schedule/" class="card blue">
-            <div class="icon">📅</div>
-            <div class="label">Расписание</div>
-            <div class="desc">Управление занятиями и слотами</div>
-        </a>
-
-        <!-- Группа -->
-        <a href="/admin/schedule/group/add/" class="card green">
-            <div class="icon">➕</div>
-            <div class="label">Создать группу</div>
-            <div class="desc">Добавление новых учебных групп</div>
-        </a>
-
-        <!-- Пользователь -->
-        <a href="/admin/users/user/add/" class="card cyan">
-            <div class="icon">👤</div>
-            <div class="label">Добавить ученика</div>
-            <div class="desc">Регистрация нового ученика</div>
-        </a>
-
-    </div>
+    <!-- Ученики -->
+    <a href="/admin/students/" class="card cyan">
+        <div class="icon">👤</div>
+        <div class="label">Ученики</div>
+        <div class="desc">Список учеников и профили</div>
+    </a>
 
 </div>
 

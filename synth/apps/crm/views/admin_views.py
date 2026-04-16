@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
 from django.http import HttpResponseRedirect
@@ -24,6 +25,62 @@ def user_view(admin_site, request, user_id):
         "groups": groups,
         "balance": balance_obj.balance,
     })
+
+
+def students_list_view(request, admin_site):
+    students = User.objects.filter(role='student')
+
+    # ===== ФИЛЬТРЫ =====
+    age = request.GET.get("age")
+    group_id = request.GET.get("group")
+
+    if age:
+        students = students.filter(age=age)
+
+    if group_id:
+        students = students.filter(enrollment__group_id=group_id)
+
+    # оптимизация
+    students = students.prefetch_related(
+        "enrollment_set__group"
+    ).select_related(
+        "student_profile"  # 🔥 теперь правильно
+    )
+
+    groups = Group.objects.all()
+    ages = list(range(6, 19))  # 🔥 фикс вместо split
+
+    context = {
+        **admin_site.each_context(request),
+        "students": students,
+        "groups": groups,
+        "ages": ages,
+        "selected_age": age,
+        "selected_group": group_id,
+    }
+
+    return TemplateResponse(request, "admin/students_list.html", context)
+
+
+def groups_list_view(request, admin_site):
+    groups = Group.objects.annotate(
+        students_count=Count('enrollment')
+    )
+
+    lessons = Lesson.objects.select_related('group')
+
+    lesson_map = {
+        lesson.group_id: lesson
+        for lesson in lessons
+    }
+
+    context = {
+        **admin_site.each_context(request),  # ✅ вот так
+        "groups": groups,
+        "lesson_map": lesson_map,
+    }
+
+    return TemplateResponse(request, "admin/groups_list.html", context)
 
 
 def group_view(admin_site, request, group_id):
