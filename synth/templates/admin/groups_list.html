@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
+{% load custom_tags %}
 
 {% block content %}
-{% load custom_tags %}
 
 <style>
 .container {
@@ -60,13 +60,14 @@
 }
 </style>
 
-    <div class="container">
+<div class="container">
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
 
         <h1>👥 Группы</h1>
 
-        <a href="/admin/schedule/group/add/" style="
+        <!-- ⚠️ FIXED: временно ведём на список групп -->
+        <a href="/admin/groups/create/" style="
             padding:10px 16px;
             background:#22c55e;
             color:white;

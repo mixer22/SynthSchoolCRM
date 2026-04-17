@@ -1,0 +1,81 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+.container {
+    max-width: 600px;
+    margin: 40px auto;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #4f46e5;
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
+</style>
+
+<div class="container">
+
+    <div class="card">
+
+        <div class="title">➕ Новый ученик</div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <input type="text" name="username" placeholder="Логин" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+
+            <input type="text" name="first_name" placeholder="Имя">
+            <input type="text" name="last_name" placeholder="Фамилия">
+
+            <input type="number" name="age" placeholder="Возраст">
+
+            <input type="text" name="parent_name" placeholder="Имя родителя">
+            <input type="text" name="parent_phone" placeholder="Телефон родителя">
+
+            <button type="submit">Создать ученика</button>
+            {% if error %}
+                <div style="color:red; margin-bottom:10px;">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

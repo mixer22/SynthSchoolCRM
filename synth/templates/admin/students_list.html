@@ -8,10 +8,8 @@
     margin: 30px auto;
 }
 
-/* HEADER */
 h1 { margin-bottom: 10px; }
 
-/* FILTERS */
 .filters {
     display: flex;
     gap: 10px;
@@ -24,7 +22,6 @@ h1 { margin-bottom: 10px; }
     border: 1px solid #e5e7eb;
 }
 
-/* TABLE */
 .table {
     width: 100%;
     border-collapse: collapse;
@@ -46,14 +43,12 @@ h1 { margin-bottom: 10px; }
 
 .table tr {
     border-bottom: 1px solid #f1f5f9;
-    transition: 0.2s;
 }
 
 .table tr:hover {
     background: #f9fafb;
 }
 
-/* LINK */
 .name {
     font-weight: 600;
     color: #111827;
@@ -71,12 +66,27 @@ h1 { margin-bottom: 10px; }
 
 <div class="container">
 
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+
     <h1>👤 Ученики</h1>
 
-    <!-- ФИЛЬТРЫ -->
+    <a href="/admin/students/create/" style="
+        padding:10px 16px;
+        background:#22c55e;
+        color:white;
+        border-radius:10px;
+        text-decoration:none;
+        font-weight:600;
+        font-size:14px;
+    ">
+        ➕ Добавить ученика
+    </a>
+
+    </div>
+
+    <!-- FILTERS -->
     <form method="get" class="filters">
 
-        <!-- возраст -->
         <select name="age" onchange="this.form.submit()">
             <option value="">Возраст</option>
             {% for i in ages %}
@@ -86,7 +96,6 @@ h1 { margin-bottom: 10px; }
             {% endfor %}
         </select>
 
-        <!-- группа -->
         <select name="group" onchange="this.form.submit()">
             <option value="">Группа</option>
             {% for g in groups %}
@@ -100,41 +109,43 @@ h1 { margin-bottom: 10px; }
 
     </form>
 
-    <!-- СПИСОК -->
+    <!-- TABLE -->
     <table class="table">
 
         <tr>
             <th>Имя</th>
             <th>Возраст</th>
             <th>Телефон родителя</th>
-            <th>Группа</th>
+            <th>Группы</th>
         </tr>
 
         {% for student in students %}
         <tr>
+
+            <!-- NAME -->
             <td>
-                <a href="/admin/user/{{ student.id }}/" class="name">
-                    {{ student.first_name }} {{ student.last_name }}
+                <a href="/admin/user/{{ student.user.id }}/" class="name">
+                    {{ student.user.first_name }} {{ student.user.last_name }}
                 </a>
             </td>
 
+            <!-- AGE -->
             <td>{{ student.age|default:"—" }}</td>
 
+            <!-- PARENT PHONE -->
             <td>
-                {% if student.student %}
-                    {{ student.student_profile.parent_phone|default:"—" }}
-                {% else %}
-                    <span class="muted">—</span>
-                {% endif %}
+                {{ student.parent_phone|default:"—" }}
             </td>
 
+            <!-- GROUPS -->
             <td>
-                {% for e in student.enrollment_set.all %}
-                    {{ e.group.name }}{% if not forloop.last %}, {% endif %}
+                {% for enrollment in student.enrollments.all %}
+                    {{ enrollment.group.name }}{% if not forloop.last %}, {% endif %}
                 {% empty %}
                     <span class="muted">—</span>
                 {% endfor %}
             </td>
+
         </tr>
         {% empty %}
         <tr>

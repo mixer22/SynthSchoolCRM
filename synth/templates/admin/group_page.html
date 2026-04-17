@@ -3,132 +3,135 @@
 {% block content %}
 
 <style>
-    .container {
-        max-width: 900px;
-        margin: 20px auto;
-    }
+.container {
+    max-width: 900px;
+    margin: 20px auto;
+}
 
-    h1 {
-        margin-bottom: 5px;
-    }
+h1 { margin-bottom: 5px; }
 
-    .subtitle {
-        color: #6b7280;
-        margin-bottom: 20px;
-    }
+.subtitle {
+    color: #6b7280;
+    margin-bottom: 20px;
+}
 
-    .card {
-        background: white;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        border: 1px solid #f1f5f9;
-    }
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border: 1px solid #f1f5f9;
+}
 
-    .title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 15px;
-    }
+.title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+}
 
-    /* ученики */
-    .students {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
+/* students */
+.students {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
 
-    .student {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        background: #f9fafb;
-        border-radius: 10px;
-        transition: 0.2s;
-    }
+.student {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #f9fafb;
+    border-radius: 10px;
+}
 
-    .student:hover {
-        background: #eef2ff;
-    }
+.student a.name {
+    text-decoration: none;
+    font-weight: 600;
+    color: #111827;
+}
 
-    .student a.name {
-        text-decoration: none;
-        font-weight: 600;
-        color: #111827;
-    }
+/* remove button */
+.remove {
+    color: #ef4444;
+    text-decoration: none;
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0;
+    transition: 0.2s;
+}
 
-    .remove {
-        color: #ef4444;
-        text-decoration: none;
-        font-size: 13px;
-        opacity: 0;
-        transition: 0.2s;
-    }
+.student:hover .remove {
+    opacity: 1;
+}
 
-    .student:hover .remove {
-        opacity: 1;
-    }
+/* form */
+.form-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
 
-    /* форма */
-    .form-row {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-    }
+select {
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    min-width: 260px;
+}
 
-    select {
-        padding: 10px;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        min-width: 260px;
-    }
+button {
+    padding: 10px 16px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
 
-    button {
-        padding: 10px 16px;
-        background: #6366f1;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-    button:hover {
-        background: #4f46e5;
-    }
-
-    .empty {
-        color: #9ca3af;
-    }
-
+.empty {
+    color: #9ca3af;
+}
 </style>
 
 <div class="container">
 
     <!-- HEADER -->
-    <h1>👥 {{ group.name }}</h1>
-    <div class="subtitle">Управление группой</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h1>👥 {{ group.name }}</h1>
 
-    <!-- УЧЕНИКИ -->
+        <a href="/admin/group/{{ group.id }}/delete/"
+           onclick="return confirm('Удалить группу? Это удалит все занятия!')"
+           style="
+                padding:10px 14px;
+                background:#ef4444;
+                color:white;
+                border-radius:10px;
+                text-decoration:none;
+                font-weight:600;
+           ">
+            🗑 Удалить группу
+        </a>
+    </div>
+
+    <!-- ENROLLED STUDENTS -->
     <div class="card">
 
-        <div class="title">Ученики</div>
+        <div class="title">Ученики в группе</div>
 
         <div class="students">
 
-            {% for user in enrolled_users %}
+            {% for student in enrolled_students %}
                 <div class="student">
 
-                    <a href="/admin/user/{{ user.id }}/" class="name">
-                        👤 {{ user.username }}
+                    <a href="/admin/user/{{ student.user.id }}/" class="name">
+                        👤 {{ student.user.username }}
                     </a>
 
-                    <a href="/admin/group/{{ group.id }}/remove-user/{{ user.id }}/"
+                    <a href="/admin/group/{{ group.id }}/remove-user/{{ student.id }}/"
                        class="remove"
                        onclick="return confirm('Удалить ученика из группы?')">
-                        ✕
+                        ×
                     </a>
 
                 </div>
@@ -137,31 +140,27 @@
             {% endfor %}
 
         </div>
-
     </div>
 
-    <!-- ДОБАВЛЕНИЕ -->
+    <!-- ADD STUDENT -->
     <div class="card">
 
         <div class="title">Добавить ученика</div>
 
         <form method="get" action="/admin/group/{{ group.id }}/add-user/" class="form-row">
 
-            <select name="user_id">
+            <select name="student_id">
                 <option value="">-- выбрать ученика --</option>
 
-                {% for user in all_users %}
-                    {% if user not in enrolled_users %}
-                        <option value="{{ user.id }}">
-                            {{ user.username }}
-                        </option>
-                    {% endif %}
+                {% for student in available_students %}
+                    <option value="{{ student.id }}">
+                        {{ student.user.username }}
+                    </option>
                 {% endfor %}
+
             </select>
 
-            <button type="submit">
-                ➕ Добавить
-            </button>
+            <button type="submit">➕ Добавить</button>
 
         </form>
 

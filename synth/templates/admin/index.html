@@ -24,11 +24,11 @@ h1 {
 /* GRID */
 .grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 18px;
 }
 
-/* CARD BUTTONS */
+/* CARD */
 .card {
     display: flex;
     flex-direction: column;
@@ -56,8 +56,9 @@ h1 {
 .blue { background: linear-gradient(135deg, #6366f1, #4f46e5); }
 .green { background: linear-gradient(135deg, #22c55e, #16a34a); }
 .cyan { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+.purple { background: linear-gradient(135deg, #a855f7, #7c3aed); }
 
-/* ICON STYLE */
+/* ICON */
 .icon {
     font-size: 22px;
     margin-bottom: 10px;
@@ -69,7 +70,7 @@ h1 {
 
 .desc {
     font-size: 13px;
-    opacity: 0.8;
+    opacity: 0.85;
     margin-top: 6px;
     font-weight: 400;
 }
@@ -97,6 +98,13 @@ h1 {
         <div class="icon">👤</div>
         <div class="label">Ученики</div>
         <div class="desc">Список учеников и профили</div>
+    </a>
+
+    <!-- Финансы (заготовка) -->
+    <a href="/admin/finance/" class="card purple">
+        <div class="icon">💰</div>
+        <div class="label">Финансы</div>
+        <div class="desc">Абонементы, платежи и баланс</div>
     </a>
 
 </div>

@@ -1,44 +1,72 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render
 
-from apps.schedule.models import Lesson
-from apps.students.models import CoinBalance, Enrollment
+from apps.schedule.models import Lesson, Group
+from apps.students.models import CoinBalance, StudentProfile
 
 
 @login_required
 def dashboard(request):
     user = request.user
 
-    balance_obj, _ = CoinBalance.objects.get_or_create(user=user)
+    balance = CoinBalance.get_for_user(user)
 
-    groups = [e.group for e in Enrollment.objects.filter(user=user)]
+    # 🔥 через Enrollment → StudentProfile
+    try:
+        student_profile = user.student_profile
+    except StudentProfile.DoesNotExist:
+        student_profile = None
 
-    lessons = Lesson.objects.filter(group__in=groups).order_by('weekday', 'time')
+    if student_profile:
+        lessons = (
+            Lesson.objects
+            .filter(group__enrollments__student=student_profile)
+            .select_related('group')
+            .distinct()
+            .order_by('weekday', 'time')
+        )
+
+        groups = (
+            Group.objects
+            .filter(enrollments__student=student_profile)
+            .distinct()
+        )
+    else:
+        lessons = Lesson.objects.none()
+        groups = Group.objects.none()
 
     return render(request, 'dashboard/dashboard.html', {
         "user": user,
-        "balance": balance_obj.balance,
+        "balance": balance.balance,
         "groups": groups,
         "lessons": lessons,
     })
 
+
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, redirect
+
+
 def user_login(request):
     if request.method == "POST":
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
 
         user = authenticate(request, username=username, password=password)
 
         if user:
             login(request, user)
 
-            next_url = request.GET.get('next')
-            if next_url:
-                return redirect(next_url)
+            # 🔥 УМНАЯ РОУТИНГ ЛОГИКА
+            if user.role == "teacher":
+                return redirect('/admin/')  # позже можно teacher dashboard
 
-            return redirect('dashboard')
+            return redirect(request.GET.get('next') or 'dashboard')
+
+        return render(request, 'auth/login.html', {
+            "error": "Неверный логин или пароль"
+        })
 
     return render(request, 'auth/login.html')
 
