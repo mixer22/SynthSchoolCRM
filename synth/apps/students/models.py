@@ -46,12 +46,13 @@ class Enrollment(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['student', 'group'],
-                name='unique_enrollment'
+                fields=['student'],
+                name='one_group_per_student'  # 🔥 ученик только в одной группе
             )
         ]
-        verbose_name = "Запись"
-        verbose_name_plural = "Записи"
+
+    def __str__(self):
+        return f"{self.student} → {self.group}"
 
 
 # =========================
@@ -76,6 +77,12 @@ class Subscription(models.Model):
     def remaining_lessons(self):
         return self.total_lessons - self.used_lessons
 
+    def use_lesson(self):
+        """Списывает занятие"""
+        if self.remaining_lessons() > 0:
+            self.used_lessons += 1
+            self.save()
+
     def __str__(self):
         return f"{self.student.user.username} ({self.remaining_lessons()} left)"
 
@@ -94,10 +101,6 @@ class CoinBalance(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        verbose_name = "Кошелек"
-        verbose_name_plural = "Кошельки"
-
     @staticmethod
     def get_for_user(user):
         obj, _ = CoinBalance.objects.get_or_create(user=user)
@@ -115,6 +118,9 @@ class CoinBalance(models.Model):
             comment=reason,
             type='add'
         )
+
+    def __str__(self):
+        return f"{self.user} | {self.balance}"
 
 
 # =========================
@@ -141,8 +147,9 @@ class Transaction(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        verbose_name = "Транзакция"
-        verbose_name_plural = "Транзакции"
+
+    def __str__(self):
+        return f"{self.user} {self.amount} ({self.type})"
 
 
 # =========================
@@ -168,6 +175,9 @@ class Attendance(models.Model):
         related_name='attendances'
     )
 
+    # 🔥 КЛЮЧЕВОЕ ПОЛЕ
+    date = models.DateField()
+
     subscription = models.ForeignKey(
         Subscription,
         on_delete=models.SET_NULL,
@@ -187,16 +197,14 @@ class Attendance(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['student', 'lesson'],
-                name='unique_student_lesson_attendance'
+                fields=['student', 'lesson', 'date'],
+                name='unique_student_lesson_date'
             )
         ]
-
-        verbose_name = "Посещение"
-        verbose_name_plural = "Посещения"
+        ordering = ['-date']
 
     def __str__(self):
-        return f"{self.student.user.username} - {self.lesson} ({self.status})"
+        return f"{self.student.user.username} - {self.date} ({self.status})"
 
     # =========================
     # BUSINESS LOGIC
@@ -208,3 +216,12 @@ class Attendance(models.Model):
     def mark_paid(self):
         self.is_paid = True
         self.save()
+
+    def apply_subscription(self):
+        """
+        Автоматически списывает занятие
+        """
+        if self.subscription and not self.is_paid:
+            self.subscription.use_lesson()
+            self.is_paid = True
+            self.save()

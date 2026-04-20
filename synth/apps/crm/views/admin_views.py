@@ -1,36 +1,156 @@
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
 
-from django.contrib.auth.hashers import make_password
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.http import HttpResponseRedirect
+from django.utils.dateparse import parse_date
+
 from apps.users.models import User
 from apps.students.models import (
     CoinBalance,
-    StudentProfile,
+    StudentProfile, Enrollment, Attendance,
 )
+from django.db.models import Count, Q
 from apps.schedule.models import Lesson, Group
 from apps.crm.services.coins import add_coins
 from apps.crm.services.groups import add_student_to_group, remove_student_from_group
+from django.contrib.auth.hashers import make_password
+
+from datetime import date
+import calendar
 # =========================
 # USER PAGE
 # =========================
+
 def user_view(admin_site, request, user_id):
     user = get_object_or_404(User, id=user_id)
+    student = user.student_profile
 
-    groups = Group.objects.filter(enrollments__student__user=user)
-
+    groups = Group.objects.filter(enrollments__student=student)
     balance_obj = CoinBalance.get_for_user(user)
+
+    # ===== МЕСЯЦ =====
+    today = date.today()
+
+    month = int(request.GET.get("month", today.month))
+    year = int(request.GET.get("year", today.year))
+
+    _, days_in_month = calendar.monthrange(year, month)
+
+    days = [
+        date(year, month, d)
+        for d in range(1, days_in_month + 1)
+    ]
+
+    # ===== УРОКИ =====
+    lessons = Lesson.objects.filter(group__in=groups)
+
+    attendances = Attendance.objects.filter(
+        student=student,
+        lesson__in=lessons,
+        date__year=year,
+        date__month=month
+    )
+    # 🔥 attendance stats
+    attendance_stats = student.attendances.aggregate(
+
+        present=Count("id", filter=Q(status="present")),
+
+        absent=Count("id", filter=Q(status="absent")),
+
+        late=Count("id", filter=Q(status="late")),
+
+        excused=Count("id", filter=Q(status="excused")),
+
+    )
+
+    attendance_map = {
+        f"{a.lesson_id}_{a.date.strftime('%Y-%m-%d')}": a
+        for a in attendances
+    }
+
+    # ===== НАВИГАЦИЯ =====
+    prev_month = month - 1 if month > 1 else 12
+    next_month = month + 1 if month < 12 else 1
+
+    prev_year = year if month > 1 else year - 1
+    next_year = year if month < 12 else year + 1
+
+    month_names = [
+        "", "Январь", "Февраль", "Март", "Апрель", "Май",
+        "Июнь", "Июль", "Август", "Сентябрь",
+        "Октябрь", "Ноябрь", "Декабрь"
+    ]
 
     return TemplateResponse(request, "admin/user_page.html", {
         **admin_site.each_context(request),
         "user_obj": user,
+        "student": student,
         "groups": groups,
         "balance": balance_obj.balance,
+
+        # attendance
+        "lessons": lessons,
+        "days": days,
+        "attendance_map": attendance_map,
+        "today": today,
+        "attendance_stats": attendance_stats,
+
+        # navigation
+        "current_month": month,
+        "current_year": year,
+        "current_month_name": month_names[month],
+        "prev_month": prev_month,
+        "next_month": next_month,
+        "prev_year": prev_year,
+        "next_year": next_year,
     })
 
+def toggle_user_active(admin_site, request, user_id):
+    user = get_object_or_404(User, id=user_id)
 
+    user.is_active = not user.is_active
+    user.save()
+
+    if not user.is_active:
+        student = getattr(user, "student_profile", None)
+
+        if student:
+            student.enrollments.all().delete()
+
+    return redirect(f"/admin/user/{user_id}/")
+
+def delete_user(admin_site, user_id):
+    user = get_object_or_404(User, id=user_id)
+
+    user.delete()
+
+    return redirect("/admin/students/")
+
+def set_attendance(admin_site, request):
+    lesson_id = request.GET.get("lesson")
+    date_str = request.GET.get("date")
+    status = request.GET.get("status")
+    student_id = request.GET.get("student")
+    if not (lesson_id and date_str and status and student_id):
+
+        return redirect(request.META.get("HTTP_REFERER", "/admin/"))
+
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    student = get_object_or_404(StudentProfile, id=student_id)
+    date_obj = parse_date(date_str)
+    attendance, created = Attendance.objects.get_or_create(
+        student=student,
+        lesson=lesson,
+        date=date_obj,
+        defaults={"status": status}
+    )
+
+    if not created:
+        attendance.status = status
+        attendance.save()
+    return redirect(request.META.get("HTTP_REFERER", "/admin/"))
 # =========================
 # STUDENTS LIST
 # =========================
@@ -133,8 +253,9 @@ def group_view(admin_site, request, group_id):
         enrollments__group=group
     ).select_related('user')
 
-    available_students = StudentProfile.objects.exclude(
-        id__in=enrolled_students.values_list("id", flat=True)
+    available_students = StudentProfile.objects.filter(
+        user__is_active=True,
+        enrollments__isnull=True
     ).select_related('user')
 
     return TemplateResponse(request, "admin/group_page.html", {
@@ -152,12 +273,54 @@ def add_user(admin_site, request, group_id):
     group = get_object_or_404(Group, id=group_id)
     student_id = request.GET.get("student_id")
 
+    # 🔥 защита от пустого выбора
+    if not student_id:
+        return HttpResponseRedirect(f"/admin/group/{group_id}/")
+
     student = get_object_or_404(StudentProfile, id=student_id)
 
-    add_student_to_group(student, group)  # 🔥 FIX
+    # 🔥 защита от неактивных
+    if not student.user.is_active:
+        return HttpResponseRedirect(f"/admin/group/{group_id}/")
+
+    add_student_to_group(student, group)
 
     return HttpResponseRedirect(f"/admin/group/{group_id}/")
 
+
+def edit_user(admin_site, request, user_id):
+
+    user = get_object_or_404(User, id=user_id)
+
+    student = user.student_profile
+
+    if request.method == "POST":
+
+        user.username = request.POST.get("username")
+
+        user.first_name = request.POST.get("first_name")
+
+        user.last_name = request.POST.get("last_name")
+
+        password = request.POST.get("password")
+
+        if password:
+
+            user.password = make_password(password)  # 🔥 важно
+
+        user.save()
+
+        # student
+
+        student.age = request.POST.get("age") or None
+
+        student.parent_name = request.POST.get("parent_name")
+
+        student.parent_phone = request.POST.get("parent_phone")
+
+        student.save()
+
+    return redirect(f"/admin/user/{user_id}/")
 
 
 def remove_user(admin_site, request, group_id, user_id):

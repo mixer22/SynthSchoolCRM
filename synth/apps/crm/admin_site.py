@@ -85,6 +85,18 @@ class CustomAdminSite(admin.AdminSite):
                 'students/create/',
                 self.admin_view(self.wrap(admin_views.create_student_view))
             ),
+            path('user/<int:user_id>/toggle-active/',
+                 self.admin_view(self.wrap(admin_views.toggle_user_active))
+                 ),
+            path("user/<int:user_id>/edit/",
+                 self.admin_view(self.wrap(admin_views.edit_user))
+                 ),
+            path("user/<int:user_id>/delete/",
+                 self.admin_view(admin_views.delete_user)
+            ),
+            path("attendance/set/",
+                 self.admin_view(self.wrap(admin_views.set_attendance))
+            ),
         ]
 
         return custom_urls + urls
