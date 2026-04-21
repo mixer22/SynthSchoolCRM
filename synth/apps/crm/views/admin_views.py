@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, time, date
 
-from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.response import TemplateResponse
 from django.http import HttpResponseRedirect
@@ -9,7 +8,7 @@ from django.utils.dateparse import parse_date
 from apps.users.models import User
 from apps.students.models import (
     CoinBalance,
-    StudentProfile, Enrollment, Attendance,
+    StudentProfile, Attendance, Subscription,
 )
 from django.db.models import Count, Q
 from apps.schedule.models import Lesson, Group
@@ -17,42 +16,106 @@ from apps.crm.services.coins import add_coins
 from apps.crm.services.groups import add_student_to_group, remove_student_from_group
 from django.contrib.auth.hashers import make_password
 
-from datetime import date
 import calendar
 # =========================
 # USER PAGE
 # =========================
 
 def user_view(admin_site, request, user_id):
+
     user = get_object_or_404(User, id=user_id)
+
     student = user.student_profile
 
     groups = Group.objects.filter(enrollments__student=student)
+
     balance_obj = CoinBalance.get_for_user(user)
 
-    # ===== МЕСЯЦ =====
+    # =========================
+
+    # 📅 MONTH
+
+    # =========================
+
     today = date.today()
 
     month = int(request.GET.get("month", today.month))
+
     year = int(request.GET.get("year", today.year))
 
     _, days_in_month = calendar.monthrange(year, month)
 
     days = [
+
         date(year, month, d)
+
         for d in range(1, days_in_month + 1)
+
     ]
 
-    # ===== УРОКИ =====
+    # =========================
+
+    # 📚 LESSONS
+
+    # =========================
+
     lessons = Lesson.objects.filter(group__in=groups)
 
-    attendances = Attendance.objects.filter(
-        student=student,
-        lesson__in=lessons,
-        date__year=year,
-        date__month=month
+    # =========================
+
+    # 🎟 SUBSCRIPTION
+
+    # =========================
+
+    active_subscription = (
+
+        student.subscriptions
+
+        .filter(is_active=True)
+
+        .order_by("-created_at")
+
+        .first()
+
     )
-    # 🔥 attendance stats
+
+    remaining = 0
+
+    used = 0
+
+    debt = 0
+
+    if active_subscription:
+        used = active_subscription.used_lessons
+        total = active_subscription.total_lessons
+
+        remaining = max(total - used, 0)
+        debt = max(used - total, 0)
+
+    # =========================
+
+    # 📅 ATTENDANCE
+
+    # =========================
+
+    attendances = Attendance.objects.filter(
+
+        student=student,
+
+        date__year=year,
+
+        date__month=month
+
+    ).select_related("lesson__group")
+
+    attendance_map = {
+
+        att.date.strftime("%Y-%m-%d"): att
+
+        for att in attendances
+
+    }
+
     attendance_stats = student.attendances.aggregate(
 
         present=Count("id", filter=Q(status="present")),
@@ -65,47 +128,103 @@ def user_view(admin_site, request, user_id):
 
     )
 
-    attendance_map = {
-        f"{a.lesson_id}_{a.date.strftime('%Y-%m-%d')}": a
-        for a in attendances
-    }
+    # =========================
 
-    # ===== НАВИГАЦИЯ =====
+    # 🔁 NAVIGATION
+
+    # =========================
+
     prev_month = month - 1 if month > 1 else 12
+
     next_month = month + 1 if month < 12 else 1
 
     prev_year = year if month > 1 else year - 1
+
     next_year = year if month < 12 else year + 1
 
     month_names = [
+
         "", "Январь", "Февраль", "Март", "Апрель", "Май",
+
         "Июнь", "Июль", "Август", "Сентябрь",
+
         "Октябрь", "Ноябрь", "Декабрь"
+
     ]
 
     return TemplateResponse(request, "admin/user_page.html", {
+
         **admin_site.each_context(request),
+
+        # 👤 user
+
         "user_obj": user,
+
         "student": student,
+
         "groups": groups,
+
         "balance": balance_obj.balance,
 
-        # attendance
+        # 🎟 subscription
+
+        "active_subscription": active_subscription,
+
+        "total_lessons": total,
+
+        "used_lessons": used,
+
+        "remaining_lessons": remaining,
+
+        "debt": debt,
+
+        # 📅 attendance
+
         "lessons": lessons,
+
         "days": days,
+
         "attendance_map": attendance_map,
+
         "today": today,
+
         "attendance_stats": attendance_stats,
 
-        # navigation
+        # 🔁 navigation
+
         "current_month": month,
+
         "current_year": year,
+
         "current_month_name": month_names[month],
+
         "prev_month": prev_month,
+
         "next_month": next_month,
+
         "prev_year": prev_year,
+
         "next_year": next_year,
+
     })
+
+def create_subscription_view(admin_site, request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    student = user.student_profile
+
+    if request.method == "POST":
+        total_lessons = int(request.POST.get("total_lessons", 0))
+        price = request.POST.get("price") or 0
+
+        Subscription.objects.create(
+            student=student,
+            total_lessons=total_lessons,
+            price=price,
+            used_lessons=0,
+            is_active=True
+        )
+
+    return redirect(f"/admin/user/{user_id}/")
 
 def toggle_user_active(admin_site, request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -128,21 +247,25 @@ def delete_user(admin_site, user_id):
 
     return redirect("/admin/students/")
 
+from django.shortcuts import get_object_or_404, redirect
+from django.utils.dateparse import parse_date
+
+from apps.students.models import StudentProfile, Attendance, Subscription
+
+
 def set_attendance(admin_site, request):
-    lesson_id = request.GET.get("lesson")
     date_str = request.GET.get("date")
     status = request.GET.get("status")
     student_id = request.GET.get("student")
-    if not (lesson_id and date_str and status and student_id):
 
+    if not (date_str and status and student_id):
         return redirect(request.META.get("HTTP_REFERER", "/admin/"))
 
-    lesson = get_object_or_404(Lesson, id=lesson_id)
     student = get_object_or_404(StudentProfile, id=student_id)
     date_obj = parse_date(date_str)
+
     attendance, created = Attendance.objects.get_or_create(
         student=student,
-        lesson=lesson,
         date=date_obj,
         defaults={"status": status}
     )
@@ -150,7 +273,45 @@ def set_attendance(admin_site, request):
     if not created:
         attendance.status = status
         attendance.save()
+
+    # =========================
+    # 💰 SUBSCRIPTION LOGIC
+    # =========================
+
+    if status in ["present", "late"]:
+
+        subscription = student.subscriptions.filter(is_active=True).first()
+
+        if subscription:
+            subscription.used_lessons += 1
+            subscription.save()
+
     return redirect(request.META.get("HTTP_REFERER", "/admin/"))
+
+def apply_subscription(student, attendance):
+    """
+    Списывает занятие с последнего активного абонемента
+    """
+
+    # берем самый свежий активный абонемент
+    subscription = (
+        student.subscriptions
+        .filter(is_active=True)
+        .order_by("-created_at")
+        .first()
+    )
+
+    if not subscription:
+        return None  # нет абонемента = долг
+
+    # списываем только если присутствие или опоздание
+    if attendance.status in ["present", "late"]:
+        subscription.use_lesson()
+
+        attendance.subscription = subscription
+        attendance.save()
+
+    return subscription
 # =========================
 # STUDENTS LIST
 # =========================

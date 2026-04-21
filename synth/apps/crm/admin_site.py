@@ -97,6 +97,11 @@ class CustomAdminSite(admin.AdminSite):
             path("attendance/set/",
                  self.admin_view(self.wrap(admin_views.set_attendance))
             ),
+            path(
+                "user/<int:user_id>/create-subscription/",
+                self.admin_view(self.wrap(admin_views.create_subscription_view)),
+                name="create_subscription"
+            ),
         ]
 
         return custom_urls + urls

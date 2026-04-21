@@ -84,68 +84,80 @@ h1 { margin:0; }
 
 /* attendance */
 .calendar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:4px;
+    margin-top:10px;
 }
 
 .day {
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 6px;
-    text-align: center;
-    width: 70px;
+    background:#f9fafb;
+    border-radius:8px;
+    padding:6px;
+    text-align:center;
+    width:78px;
+    transition:0.2s;
+}
+
+.day:hover {
+    background:#eef2ff;
 }
 
 .date {
-    font-size: 11px;
-    margin-bottom: 4px;
+    font-size:11px;
+    margin-bottom:4px;
 }
 
 .actions {
-    display: flex;
-    gap: 3px;
-    justify-content: center;
+    display:flex;
+    gap:2px;
+    justify-content:center;
 }
 
 .badge {
-    padding: 3px 6px;
-    border-radius: 6px;
-    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 7px;
+    font-size: 12px;
     text-decoration: none;
-    opacity: 0.4;
+
+    opacity: 0.75;              /* ВАЖНО: было 0.35 → делаем читаемым */
+    transition: 0.15s;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 24px;
+    min-height: 24px;
+    line-height: 1;
+
+    border: 1px solid rgba(0,0,0,0.06);
+}
+
+.badge:hover {
+    opacity:1;
+    transform:scale(1.06);
 }
 
 .badge.active {
     opacity: 1;
-    transform: scale(1.1);
-}
-.today {
-    border: 2px solid #6366f1;
+    transform: scale(1.06);
+
+    border: 1px solid currentColor;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.10);
 }
 
-.calendar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-}
+.badge.green.active { background:#22c55e; color:white; }
+.badge.red.active { background:#ef4444; color:white; }
+.badge.yellow.active { background:#eab308; color:white; }
 
-.day {
-    background: #f9fafb;
-    border-radius: 8px;
-    padding: 6px;
-    text-align: center;
-    width: 70px;
-    transition: 0.2s;
-}
+.today { border:2px solid #6366f1; }
 
-.day:hover {
-    background: #eef2ff;
-}
+
 .green { background:#dcfce7; color:#166534; }
+
 .red { background:#fee2e2; color:#991b1b; }
+
 .yellow { background:#fef9c3; color:#854d0e; }
 
 /* MODAL */
@@ -182,274 +194,237 @@ h1 { margin:0; }
 
 <div class="container">
 
-    <!-- HEADER -->
-    <div class="header">
-        <div>
-            <div class="subtitle">Профиль ученика</div>
-        </div>
-        <div style="display:flex; gap:10px;">
+<!-- HEADER -->
+<div class="header">
+    <div class="subtitle">Профиль ученика</div>
 
-    <!-- toggle active -->
-    <a href="/admin/user/{{ user_obj.id }}/toggle-active/"
-       class="btn"
-       style="
-            background: {% if user_obj.is_active %}#f59e0b{% else %}#10b981{% endif %};
-            color:white;
-       ">
-        {% if user_obj.is_active %}
-            ⛔ Деактивировать
-        {% else %}
-            ✅ Активировать
-        {% endif %}
-    </a>
+    <div style="display:flex; gap:10px;">
+        <a href="/admin/user/{{ user_obj.id }}/toggle-active/"
+           class="btn"
+           style="background: {% if user_obj.is_active %}#f59e0b{% else %}#10b981{% endif %}; color:white;">
+            {% if user_obj.is_active %}⛔ Деактивировать{% else %}✅ Активировать{% endif %}
+        </a>
 
-    <!-- delete -->
-    <a href="/admin/user/{{ user_obj.id }}/delete/"
-       onclick="return confirm('Удалить ученика? Это действие необратимо!')"
-       class="btn"
-       style="background:#ef4444; color:white;">
-        🗑 Удалить
-    </a>
+        <a href="/admin/user/{{ user_obj.id }}/delete/"
+           onclick="return confirm('Удалить ученика?')"
+           class="btn" style="background:#ef4444; color:white;">
+            🗑 Удалить
+        </a>
+
+        <button class="btn btn-gray" onclick="openEditModal()">✏️ Редактировать</button>
+    </div>
+</div>
+
+<!-- GRID -->
+<div class="grid">
+
+<!-- USER -->
+<div class="card">
+    <h3>👤 Ученик</h3>
+
+    <div class="row"><div class="label">Логин</div><div class="value">{{ user_obj.username }}</div></div>
+    <div class="row"><div class="label">Имя</div><div class="value">{{ user_obj.first_name|default:"—" }}</div></div>
+    <div class="row"><div class="label">Фамилия</div><div class="value">{{ user_obj.last_name|default:"—" }}</div></div>
+    <div class="row"><div class="label">Возраст</div><div class="value">{{ student.age|default:"—" }}</div></div>
+</div>
+
+<!-- PARENT -->
+<div class="card">
+    <h3>👨‍👩‍👧 Родитель</h3>
+
+    <div class="row"><div class="label">Имя</div><div class="value">{{ student.parent_name|default:"—" }}</div></div>
+    <div class="row"><div class="label">Телефон</div><div class="value">{{ student.parent_phone|default:"—" }}</div></div>
+</div>
 
 </div>
 
-    <button class="btn btn-gray" onclick="openEditModal()">
-        ✏️ Редактировать
+<!-- GROUPS -->
+<div class="card" style="margin-top:20px;">
+    <h3>📚 Группа</h3>
+    <div class="groups">
+        {% for group in groups %}
+            <a href="/admin/group/{{ group.id }}/" class="group">{{ group.name }}</a>
+        {% empty %}
+            <span>Нет группы</span>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- COINS -->
+<div class="card" style="margin-top:20px;">
+    <h3>🪙 Баланс</h3>
+    <div class="coins">{{ balance }}</div>
+    <button class="btn btn-green" onclick="openModal()">➕ Начислить</button>
+</div>
+
+<!-- SUBSCRIPTION -->
+<div class="card" style="margin-top:20px;">
+    <h3>🎟 Абонемент</h3>
+
+    {% if active_subscription %}
+
+        <div class="row">
+            <div class="label">Всего занятий</div>
+            <div class="value">{{ active_subscription.total_lessons }}</div>
+        </div>
+
+        <div class="row">
+            <div class="label">Использовано</div>
+            <div class="value">{{ used_lessons }}</div>
+        </div>
+
+        <div class="row">
+            <div class="label">Осталось</div>
+            <div class="value">{{ remaining_lessons }}</div>
+        </div>
+
+        {% if debt > 0 %}
+            <div style="margin-top:10px;padding:10px;border-radius:10px;background:#fee2e2;color:#991b1b;font-weight:600;">
+                ⚠ Долг: {{ debt }} занятий
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div style="color:#9ca3af;">Нет активного абонемента</div>
+    {% endif %}
+    <button class="btn btn-green" style="margin-top:10px;" onclick="openSubModal()">
+    ➕ Выдать абонемент
     </button>
-    </div>
-
-    <!-- GRID -->
-    <div class="grid">
-
-        <!-- USER -->
-        <div class="card">
-            <h3>👤 Ученик</h3>
-
-            <div class="row">
-                <div class="label">Логин</div>
-                <div class="value">{{ user_obj.username }}</div>
-            </div>
-
-            <div class="row">
-                <div class="label">Имя</div>
-                <div class="value">{{ user_obj.first_name|default:"—" }}</div>
-            </div>
-
-            <div class="row">
-                <div class="label">Фамилия</div>
-                <div class="value">{{ user_obj.last_name|default:"—" }}</div>
-            </div>
-
-            <div class="row">
-                <div class="label">Возраст</div>
-                <div class="value">{{ student.age|default:"—" }}</div>
-            </div>
-        </div>
-
-        <!-- PARENT -->
-        <div class="card">
-            <h3>👨‍👩‍👧 Родитель</h3>
-
-            <div class="row">
-                <div class="label">Имя</div>
-                <div class="value">{{ student.parent_name|default:"—" }}</div>
-            </div>
-
-            <div class="row">
-                <div class="label">Телефон</div>
-                <div class="value">{{ student.parent_phone|default:"—" }}</div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- GROUPS -->
-    <div class="card" style="margin-top:20px;">
-        <h3>📚 Группа</h3>
-
-        <div class="groups">
-            {% for group in groups %}
-                <a href="/admin/group/{{ group.id }}/" class="group">
-                    {{ group.name }}
-                </a>
-            {% empty %}
-                <span>Нет группы</span>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- COINS -->
-    <div class="card" style="margin-top:20px;">
-        <h3>🪙 Баланс</h3>
-
-        <div class="coins">{{ balance }}</div>
-
-        <button class="btn btn-green" onclick="openModal()">➕ Начислить</button>
-    </div>
+</div>
 
 <!-- ATTENDANCE -->
 <div class="card" style="margin-top:20px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
 
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <div class="title">📅 Посещаемость</div>
-    <div style="display:flex; gap:8px; font-size:13px;">
+    <h3 style="margin:0;">📅 Посещаемость</h3>
 
-        <span class="badge green active">
+    <div style="display:flex; align-items:center; gap:20px;">
 
-            ✔ {{ attendance_stats.present|default:0 }}
+        <!-- статистика -->
+        <div style="display:flex; gap:8px; font-size:13px;">
 
-        </span>
+            <span class="badge green active">
+                ✔ {{ attendance_stats.present|default:0 }}
+            </span>
 
-        <span class="badge red active">
+            <span class="badge red active">
+                ✖ {{ attendance_stats.absent|default:0 }}
+            </span>
 
-            ✖ {{ attendance_stats.absent|default:0 }}
+            <span class="badge yellow active">
+                ⏱ {{ attendance_stats.late|default:0 }}
+            </span>
 
-        </span>
+        </div>
 
-        <span class="badge yellow active">
-
-            ⏱ {{ attendance_stats.late|default:0 }}
-
-        </span>
-
-    </div>
-
+        <!-- навигация -->
         <div style="display:flex; gap:10px; align-items:center;">
 
-            <a href="?month={{ prev_month }}&year={{ prev_year }}"
-               class="btn btn-gray">←</a>
+            <a href="?month={{ prev_month }}&year={{ prev_year }}" class="btn btn-gray">←</a>
 
             <b>{{ current_month_name }} {{ current_year }}</b>
 
-            <a href="?month={{ next_month }}&year={{ next_year }}"
-               class="btn btn-gray">→</a>
+            <a href="?month={{ next_month }}&year={{ next_year }}" class="btn btn-gray">→</a>
 
         </div>
+
     </div>
 
-    {% for lesson in lessons %}
-        <div style="margin-top:15px;">
+</div>
+    <div class="calendar">
+        {% for d in days %}
+            {% with date_str=d|date:"Y-m-d" %}
+            {% with att=attendance_map|get_item:date_str %}
 
-            <b>{{ lesson.group.name }}</b>
+            <div class="day {% if d == today %}today{% endif %}">
+                <div class="date">{{ d|date:"d.m" }}</div>
 
-            <div class="calendar">
+                <div class="actions">
 
-                {% for d in days %}
+                    <a href="/admin/attendance/set/?date={{ date_str }}&status=present&student={{ student.id }}"
+                       class="badge green {% if att and att.status == 'present' %}active{% endif %}">✔</a>
 
-                    {% with date_str=d|date:"Y-m-d" %}
-                    {% with key=lesson.id|stringformat:"s"|add:"_"|add:date_str %}
-                    {% with att=attendance_map|get_item:key %}
+                    <a href="/admin/attendance/set/?date={{ date_str }}&status=absent&student={{ student.id }}"
+                       class="badge red {% if att and att.status == 'absent' %}active{% endif %}">✖</a>
 
-                    <div class="day {% if d == today %}today{% endif %}">
+                    <a href="/admin/attendance/set/?date={{ date_str }}&status=late&student={{ student.id }}"
+                       class="badge yellow {% if att and att.status == 'late' %}active{% endif %}">⏱</a>
 
-                        <div class="date">
-                            {{ d|date:"d.m" }}
-                        </div>
-
-                        <div class="actions">
-
-                            <a href="/admin/attendance/set/?lesson={{ lesson.id }}&date={{ date_str }}&status=present&student={{ student.id }}"
-                               class="badge green {% if att and att.status == 'present' %}active{% endif %}">
-                                ✔
-                            </a>
-
-                            <a href="/admin/attendance/set/?lesson={{ lesson.id }}&date={{ date_str }}&status=absent&student={{ student.id }}"
-                               class="badge red {% if att and att.status == 'absent' %}active{% endif %}">
-                                ✖
-                            </a>
-
-                            <a href="/admin/attendance/set/?lesson={{ lesson.id }}&date={{ date_str }}&status=late&student={{ student.id }}"
-                               class="badge yellow {% if att and att.status == 'late' %}active{% endif %}">
-                                ⏱
-                            </a>
-
-                        </div>
-
-                    </div>
-
-                    {% endwith %}
-                    {% endwith %}
-                    {% endwith %}
-
-                {% endfor %}
-
+                </div>
             </div>
 
-        </div>
-    {% endfor %}
+            {% endwith %}
+            {% endwith %}
+        {% endfor %}
+    </div>
+</div>
 
 </div>
 
-<!-- MODAL -->
+<!-- MODALS -->
+
 <div id="modal" class="modal">
     <div class="modal-box">
-
-        <h3>Начислить коины</h3>
-
+        <h3>Коины</h3>
         <form method="post" action="/admin/user/{{ user_obj.id }}/add-coins/">
             {% csrf_token %}
-
-            <input type="number" name="amount" placeholder="Количество" required>
-
+            <input type="number" name="amount">
             <div class="modal-actions">
-                <button type="submit" class="btn btn-green">Добавить</button>
+                <button class="btn btn-green">OK</button>
                 <button type="button" class="btn btn-gray" onclick="closeModal()">Отмена</button>
             </div>
         </form>
-
     </div>
 </div>
+
+<div id="subModal" class="modal">
+    <div class="modal-box">
+        <h3>Абонемент</h3>
+        <form method="post" action="/admin/user/{{ user_obj.id }}/create-subscription/">
+            {% csrf_token %}
+            <input type="number" name="total_lessons" placeholder="Занятия">
+            <input type="number" name="price" placeholder="Цена">
+            <div class="modal-actions">
+                <button class="btn btn-green">Создать</button>
+                <button type="button" class="btn btn-gray" onclick="closeSubModal()">Отмена</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="editModal" class="modal">
-    <div class="modal-box" style="width:400px;">
-
-        <h3>Редактировать ученика</h3>
-
+    <div class="modal-box">
+        <h3>Редактирование</h3>
         <form method="post" action="/admin/user/{{ user_obj.id }}/edit/">
             {% csrf_token %}
-
-            <input type="text" name="username" value="{{ user_obj.username }}" placeholder="Логин">
-
-            <input type="password" name="password" placeholder="Новый пароль (необязательно)">
-
-            <input type="text" name="first_name" value="{{ user_obj.first_name }}" placeholder="Имя">
-
-            <input type="text" name="last_name" value="{{ user_obj.last_name }}" placeholder="Фамилия">
-
-            <input type="number" name="age" value="{{ student.age }}" placeholder="Возраст">
-
-            <input type="text" name="parent_name" value="{{ student.parent_name }}" placeholder="Родитель">
-
-            <input type="text" name="parent_phone" value="{{ student.parent_phone }}" placeholder="Телефон родителя">
-
+            <input name="username" value="{{ user_obj.username }}">
+            <input name="first_name" value="{{ user_obj.first_name }}">
+            <input name="last_name" value="{{ user_obj.last_name }}">
+            <input name="age" value="{{ student.age }}">
+            <input name="parent_name" value="{{ student.parent_name }}">
+            <input name="parent_phone" value="{{ student.parent_phone }}">
             <div class="modal-actions">
-                <button type="submit" class="btn btn-green">Сохранить</button>
+                <button class="btn btn-green">Сохранить</button>
                 <button type="button" class="btn btn-gray" onclick="closeEditModal()">Отмена</button>
             </div>
-
         </form>
-
     </div>
 </div>
+
 <script>
-function openModal() {
-    document.getElementById("modal").style.display = "flex";
-}
+function openModal(){document.getElementById("modal").style.display="flex";}
+function closeModal(){document.getElementById("modal").style.display="none";}
 
-function closeModal() {
-    document.getElementById("modal").style.display = "none";
-}
+function openSubModal(){document.getElementById("subModal").style.display="flex";}
+function closeSubModal(){document.getElementById("subModal").style.display="none";}
 
-window.onclick = function(e) {
-    if (e.target.id === "modal") {
-        closeModal();
+function openEditModal(){document.getElementById("editModal").style.display="flex";}
+function closeEditModal(){document.getElementById("editModal").style.display="none";}
+
+window.onclick = function(e){
+    if(e.target.classList.contains("modal")){
+        e.target.style.display="none";
     }
-}
-function openEditModal() {
-    document.getElementById("editModal").style.display = "flex";
-}
-
-function closeEditModal() {
-    document.getElementById("editModal").style.display = "none";
 }
 </script>
 

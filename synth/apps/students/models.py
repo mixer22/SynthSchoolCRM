@@ -60,32 +60,51 @@ class Enrollment(models.Model):
 # =========================
 class Subscription(models.Model):
     student = models.ForeignKey(
-        StudentProfile,
+        "students.StudentProfile",
         on_delete=models.CASCADE,
-        related_name='subscriptions'
+        related_name="subscriptions"
     )
 
+    title = models.CharField(max_length=100, blank=True)  # "Сентябрь", "10 занятий"
+
     total_lessons = models.PositiveIntegerField()
+
     used_lessons = models.PositiveIntegerField(default=0)
 
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-
-    is_active = models.BooleanField(default=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    expires_at = models.DateField(null=True, blank=True)  # опционально
+
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    # ---------------------
+    # BUSINESS LOGIC
+    # ---------------------
+
     def remaining_lessons(self):
-        return self.total_lessons - self.used_lessons
+        return max(self.total_lessons - self.used_lessons, 0)
+
+    def is_exhausted(self):
+        return self.remaining_lessons() <= 0
 
     def use_lesson(self):
-        """Списывает занятие"""
-        if self.remaining_lessons() > 0:
-            self.used_lessons += 1
-            self.save()
+        self.used_lessons += 1
+        self.save()
+        return True
+
+    def debt(self):
+        """
+        Долг = сколько занятий использовано сверх лимита
+        """
+        return max(self.used_lessons - self.total_lessons, 0)
 
     def __str__(self):
-        return f"{self.student.user.username} ({self.remaining_lessons()} left)"
-
+        return f"{self.student} | {self.remaining_lessons()} left"
 
 # =========================
 # COIN BALANCE
@@ -150,8 +169,6 @@ class Transaction(models.Model):
 
     def __str__(self):
         return f"{self.user} {self.amount} ({self.type})"
-
-
 # =========================
 # ATTENDANCE (ПОСЕЩАЕМОСТЬ)
 # =========================
@@ -171,28 +188,21 @@ class Attendance(models.Model):
 
     lesson = models.ForeignKey(
         'schedule.Lesson',
-        on_delete=models.CASCADE,
-        related_name='attendances'
-    )
-
-    # 🔥 КЛЮЧЕВОЕ ПОЛЕ
-    date = models.DateField()
-
-    subscription = models.ForeignKey(
-        Subscription,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='attendances'
     )
 
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    date = models.DateField()
 
-    is_paid = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
 
     comment = models.CharField(max_length=255, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
+
+    is_paid = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
@@ -205,23 +215,3 @@ class Attendance(models.Model):
 
     def __str__(self):
         return f"{self.student.user.username} - {self.date} ({self.status})"
-
-    # =========================
-    # BUSINESS LOGIC
-    # =========================
-
-    def is_debt(self):
-        return self.subscription is None
-
-    def mark_paid(self):
-        self.is_paid = True
-        self.save()
-
-    def apply_subscription(self):
-        """
-        Автоматически списывает занятие
-        """
-        if self.subscription and not self.is_paid:
-            self.subscription.use_lesson()
-            self.is_paid = True
-            self.save()
