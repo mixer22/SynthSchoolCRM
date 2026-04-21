@@ -85,6 +85,8 @@ def user_view(admin_site, request, user_id):
 
     debt = 0
 
+    total = 0
+
     if active_subscription:
         used = active_subscription.used_lessons
         total = active_subscription.total_lessons
@@ -212,19 +214,33 @@ def create_subscription_view(admin_site, request, user_id):
     user = get_object_or_404(User, id=user_id)
     student = user.student_profile
 
-    if request.method == "POST":
-        total_lessons = int(request.POST.get("total_lessons", 0))
-        price = request.POST.get("price") or 0
+    total_lessons = int(request.POST.get("total_lessons"))
+    price = request.POST.get("price") or None
 
-        Subscription.objects.create(
-            student=student,
-            total_lessons=total_lessons,
-            price=price,
-            used_lessons=0,
-            is_active=True
-        )
+    old_subs = student.subscriptions.filter(is_active=True)
 
-    return redirect(f"/admin/user/{user_id}/")
+    total_debt = 0
+    total_remaining = 0
+
+    for sub in old_subs:
+        total_debt += sub.debt()
+        total_remaining += sub.remaining_lessons()
+
+        sub.is_active = False
+        sub.save()
+
+    # 🔥 считаем итог
+    final_total = total_lessons + total_remaining
+
+    new_sub = Subscription.objects.create(
+        student=student,
+        total_lessons=final_total,
+        used_lessons=total_debt,
+        price=price,
+        is_active=True
+    )
+
+    return redirect(request.META.get("HTTP_REFERER", "/admin/"))
 
 def toggle_user_active(admin_site, request, user_id):
     user = get_object_or_404(User, id=user_id)
@@ -270,24 +286,42 @@ def set_attendance(admin_site, request):
         defaults={"status": status}
     )
 
-    if not created:
-        attendance.status = status
-        attendance.save()
+    # 🔥 старый статус
+    old_status = attendance.status if not created else None
+
+    attendance.status = status
 
     # =========================
-    # 💰 SUBSCRIPTION LOGIC
+    # 💰 ЛОГИКА СПИСАНИЯ
     # =========================
 
     if status in ["present", "late"]:
 
-        subscription = student.subscriptions.filter(is_active=True).first()
+        # если ещё не списано — списываем
+        if not attendance.is_paid:
 
-        if subscription:
-            subscription.used_lessons += 1
-            subscription.save()
+            subscription = student.subscriptions.filter(is_active=True).first()
+
+            if subscription:
+                subscription.use_lesson()
+
+            attendance.is_paid = True
+
+    else:
+        # если стало "отсутствовал" → откатываем оплату
+        if attendance.is_paid:
+
+            subscription = student.subscriptions.filter(is_active=True).first()
+
+            if subscription:
+                subscription.used_lessons = max(subscription.used_lessons - 1, 0)
+                subscription.save()
+
+            attendance.is_paid = False
+
+    attendance.save()
 
     return redirect(request.META.get("HTTP_REFERER", "/admin/"))
-
 def apply_subscription(student, attendance):
     """
     Списывает занятие с последнего активного абонемента
@@ -620,3 +654,94 @@ def delete_group(admin_site, request, group_id):
     group.delete()
 
     return redirect("/admin/groups/")
+
+from django.db.models import Count, Q
+from django.utils.timezone import now
+from datetime import date, timedelta
+
+from django.db.models import F
+from datetime import date, timedelta
+
+def stats_view(admin_site, request):
+    today = date.today()
+
+    # =========================
+    # 👤 STUDENTS
+    # =========================
+    total_students = StudentProfile.objects.count()
+    active_students = StudentProfile.objects.filter(user__is_active=True).count()
+
+    # =========================
+    # 📅 ATTENDANCE
+    # =========================
+    attendance_qs = Attendance.objects.all()
+
+    total_attendance = attendance_qs.count()
+    present = attendance_qs.filter(status="present").count()
+    absent = attendance_qs.filter(status="absent").count()
+    late = attendance_qs.filter(status="late").count()
+
+    attendance_percent = round(
+        (present / total_attendance * 100) if total_attendance else 0,
+        1
+    )
+
+    # =========================
+    # 🎟 SUBSCRIPTIONS
+    # =========================
+    subs = Subscription.objects.filter(is_active=True)
+
+    total_subs = subs.count()
+
+    # суммарные значения
+    total_used = sum(s.used_lessons for s in subs)
+    total_limit = sum(s.total_lessons for s in subs)
+
+    # долг
+    total_debt = sum(s.debt() for s in subs)
+
+    # 🔥 требуют продления (вышли в 0 или минус)
+    need_renewal = subs.filter(
+        used_lessons__gte=F("total_lessons")
+    ).count()
+
+    # 🔥 скоро закончатся (<= 2 занятий осталось)
+    almost_finished = subs.filter(
+        total_lessons__gt=F("used_lessons"),
+        total_lessons__lte=F("used_lessons") + 2
+    ).count()
+
+    # =========================
+    # 📈 GROWTH
+    # =========================
+    last_30_days = today - timedelta(days=30)
+
+    new_students = StudentProfile.objects.filter(
+        created_at__date__gte=last_30_days
+    ).count()
+
+    # =========================
+    # 📊 RESPONSE
+    # =========================
+    return TemplateResponse(request, "admin/stats.html", {
+        **admin_site.each_context(request),
+
+        # 👤 students
+        "total_students": total_students,
+        "active_students": active_students,
+        "new_students": new_students,
+
+        # 📅 attendance
+        "attendance_percent": attendance_percent,
+        "present": present,
+        "absent": absent,
+        "late": late,
+
+        # 🎟 subscriptions
+        "total_subs": total_subs,
+        "total_used": total_used,
+        "total_limit": total_limit,
+        "total_debt": total_debt,
+        "need_renewal": need_renewal,
+        "almost_finished": almost_finished,
+    })

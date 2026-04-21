@@ -102,6 +102,9 @@ class CustomAdminSite(admin.AdminSite):
                 self.admin_view(self.wrap(admin_views.create_subscription_view)),
                 name="create_subscription"
             ),
+            path("stats/",
+                 self.admin_view(self.wrap(admin_views.stats_view)),
+                name="stats"),
         ]
 
         return custom_urls + urls

@@ -65,47 +65,54 @@ class Subscription(models.Model):
         related_name="subscriptions"
     )
 
-    title = models.CharField(max_length=100, blank=True)  # "Сентябрь", "10 занятий"
+    title = models.CharField(max_length=100, blank=True)
 
     total_lessons = models.PositiveIntegerField()
-
     used_lessons = models.PositiveIntegerField(default=0)
 
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-
-    expires_at = models.DateField(null=True, blank=True)  # опционально
+    expires_at = models.DateField(null=True, blank=True)
 
     is_active = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["-created_at"]
 
-    # ---------------------
-    # BUSINESS LOGIC
-    # ---------------------
+    # =========================
+    # 🔢 CORE LOGIC
+    # =========================
+
+    def raw_balance(self):
+        return self.total_lessons - self.used_lessons
 
     def remaining_lessons(self):
-        return max(self.total_lessons - self.used_lessons, 0)
+        return max(self.raw_balance(), 0)
+
+    def debt(self):
+        return max(-self.raw_balance(), 0)
 
     def is_exhausted(self):
-        return self.remaining_lessons() <= 0
+        return self.raw_balance() <= 0
 
     def use_lesson(self):
         self.used_lessons += 1
         self.save()
         return True
 
-    def debt(self):
-        """
-        Долг = сколько занятий использовано сверх лимита
-        """
-        return max(self.used_lessons - self.total_lessons, 0)
+    # =========================
+    # 📊 AGGREGATION
+    # =========================
+
+    @staticmethod
+    def get_total_debt(student):
+        subs = student.subscriptions.filter(is_active=True)
+
+        return sum(sub.debt() for sub in subs)
 
     def __str__(self):
         return f"{self.student} | {self.remaining_lessons()} left"
-
 # =========================
 # COIN BALANCE
 # =========================

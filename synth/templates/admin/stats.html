@@ -1,0 +1,136 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+
+<style>
+.container {
+    max-width: 1100px;
+    margin: 30px auto;
+    font-family: Arial;
+}
+
+/* KPI */
+.kpi-grid {
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:12px;
+    margin-bottom:20px;
+}
+
+.kpi {
+    background:white;
+    padding:16px;
+    border-radius:14px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.06);
+}
+
+.kpi .label {
+    font-size:12px;
+    color:#6b7280;
+}
+
+.kpi .value {
+    font-size:22px;
+    font-weight:700;
+}
+
+/* blocks */
+.block {
+    background:white;
+    padding:18px;
+    border-radius:14px;
+    margin-bottom:16px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.06);
+}
+
+.title {
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+.row {
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+}
+</style>
+
+<div class="container">
+
+    <!-- KPI -->
+    <div class="kpi-grid">
+
+        <div class="kpi">
+            <div class="label">Всего учеников</div>
+            <div class="value">{{ total_students }}</div>
+        </div>
+
+        <div class="kpi">
+            <div class="label">Активных</div>
+            <div class="value">{{ active_students }}</div>
+        </div>
+
+        <div class="kpi">
+            <div class="label">Посещаемость</div>
+            <div class="value">{{ attendance_percent }}%</div>
+        </div>
+
+        <div class="kpi">
+            <div class="label">Новые (30 дней)</div>
+            <div class="value">{{ new_students }}</div>
+        </div>
+
+    </div>
+
+    <!-- Attendance -->
+    <div class="block">
+        <div class="title">📅 Посещаемость</div>
+
+        <div class="row">
+            <span>Присутствовали</span>
+            <b>{{ present }}</b>
+        </div>
+
+        <div class="row">
+            <span>Отсутствовали</span>
+            <b>{{ absent }}</b>
+        </div>
+
+        <div class="row">
+            <span>Опоздания</span>
+            <b>{{ late }}</b>
+        </div>
+
+    </div>
+
+    <!-- Subscriptions -->
+<div class="block">
+    <div class="title">🎟 Абонементы</div>
+
+    <div class="row">
+        <span>Активных</span>
+        <b>{{ total_subs }}</b>
+    </div>
+
+    <div class="row">
+        <span>Требуют продления</span>
+        <b style="color:#ef4444;">{{ need_renewal }}</b>
+    </div>
+
+    <div class="row">
+        <span>Скоро закончатся</span>
+        <b style="color:#f59e0b;">{{ almost_finished }}</b>
+    </div>
+
+    <div class="row">
+        <span>Общий долг (занятий)</span>
+        <b style="color:#ef4444;">{{ total_debt }}</b>
+    </div>
+
+</div>
+
+
+</div>
+
+{% endblock %}

@@ -148,6 +148,7 @@ JAZZMIN_SETTINGS = {
             {"name": "Расписание", "url": "/admin/schedule/", "icon": "fas fa-calendar"},
             {"name": "Группы", "url": "/admin/groups/", "icon": "fas fa-users"},
             {"name": "Ученики", "url": "/admin/students/", "icon": "fas fa-user"},
+            {"name": "Аналитика", "url": "/admin/stats/",  "icon": "fas fa-chart-line"},
         ]
     },
 
