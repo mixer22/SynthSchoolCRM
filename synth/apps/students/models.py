@@ -114,41 +114,50 @@ class Subscription(models.Model):
     def __str__(self):
         return f"{self.student} | {self.remaining_lessons()} left"
 # =========================
-# COIN BALANCE
+# Experience
 # =========================
-class CoinBalance(models.Model):
+class Experience(models.Model):
     user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
+        "users.User",
         on_delete=models.CASCADE,
-        related_name="coin_balance"
+        related_name="xp"
     )
 
-    balance = models.IntegerField(default=0)
+    total_xp = models.PositiveIntegerField(default=0)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @classmethod
+    def get_for_user(cls, user):
+        obj, _ = cls.objects.get_or_create(user=user)
+        return obj
+
+    # ===== ЛОГИКА =====
+
+    def add_xp(self, amount):
+        self.total_xp += amount
+        self.save()
+
+    def get_level(self):
+        return self.total_xp // 1000
+
+    def get_progress(self):
+        return self.total_xp % 1000
+
+    def __str__(self):
+        return f"{self.user} | {self.total_xp} XP"
+
+class ExperienceLog(models.Model):
+    user = models.ForeignKey("users.User", on_delete=models.CASCADE)
+
+    amount = models.IntegerField()
+
+    reason = models.CharField(max_length=255)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    @staticmethod
-    def get_for_user(user):
-        obj, _ = CoinBalance.objects.get_or_create(user=user)
-        return obj
-
-    @staticmethod
-    def add_coins(user, amount, reason=""):
-        balance = CoinBalance.get_for_user(user)
-        balance.balance += amount
-        balance.save()
-
-        Transaction.objects.create(
-            user=user,
-            amount=amount,
-            comment=reason,
-            type='add'
-        )
-
     def __str__(self):
-        return f"{self.user} | {self.balance}"
-
-
+        return f"{self.user} +{self.amount} XP ({self.reason})"
 # =========================
 # TRANSACTION
 # =========================

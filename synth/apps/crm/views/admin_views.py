@@ -7,12 +7,12 @@ from django.utils.dateparse import parse_date
 
 from apps.users.models import User
 from apps.students.models import (
-    CoinBalance,
+    Experience,
     StudentProfile, Attendance, Subscription,
 )
 from django.db.models import Count, Q
 from apps.schedule.models import Lesson, Group
-from apps.crm.services.coins import add_coins
+from apps.crm.services.exp import add_xp
 from apps.crm.services.groups import add_student_to_group, remove_student_from_group
 from django.contrib.auth.hashers import make_password
 
@@ -22,192 +22,110 @@ import calendar
 # =========================
 
 def user_view(admin_site, request, user_id):
-
     user = get_object_or_404(User, id=user_id)
-
     student = user.student_profile
 
     groups = Group.objects.filter(enrollments__student=student)
 
-    balance_obj = CoinBalance.get_for_user(user)
+    # 🧠 XP
+    xp_obj = Experience.objects.filter(user=user).first()
 
-    # =========================
+    total_xp = xp_obj.total_xp if xp_obj else 0
+    level = total_xp // 1000
+    xp_progress = total_xp % 1000  # остаток до уровня
 
     # 📅 MONTH
-
-    # =========================
-
     today = date.today()
-
     month = int(request.GET.get("month", today.month))
-
     year = int(request.GET.get("year", today.year))
 
     _, days_in_month = calendar.monthrange(year, month)
-
-    days = [
-
-        date(year, month, d)
-
-        for d in range(1, days_in_month + 1)
-
-    ]
-
-    # =========================
+    days = [date(year, month, d) for d in range(1, days_in_month + 1)]
 
     # 📚 LESSONS
-
-    # =========================
-
     lessons = Lesson.objects.filter(group__in=groups)
 
-    # =========================
-
     # 🎟 SUBSCRIPTION
-
-    # =========================
-
     active_subscription = (
-
         student.subscriptions
-
         .filter(is_active=True)
-
         .order_by("-created_at")
-
         .first()
-
     )
 
-    remaining = 0
-
-    used = 0
-
-    debt = 0
-
-    total = 0
+    remaining = used = debt = total = 0
 
     if active_subscription:
         used = active_subscription.used_lessons
         total = active_subscription.total_lessons
-
         remaining = max(total - used, 0)
         debt = max(used - total, 0)
 
-    # =========================
-
     # 📅 ATTENDANCE
-
-    # =========================
-
     attendances = Attendance.objects.filter(
-
         student=student,
-
         date__year=year,
-
         date__month=month
-
     ).select_related("lesson__group")
 
     attendance_map = {
-
         att.date.strftime("%Y-%m-%d"): att
-
         for att in attendances
-
     }
 
     attendance_stats = student.attendances.aggregate(
-
         present=Count("id", filter=Q(status="present")),
-
         absent=Count("id", filter=Q(status="absent")),
-
         late=Count("id", filter=Q(status="late")),
-
         excused=Count("id", filter=Q(status="excused")),
-
     )
 
-    # =========================
-
-    # 🔁 NAVIGATION
-
-    # =========================
-
+    # 🔁 NAV
     prev_month = month - 1 if month > 1 else 12
-
     next_month = month + 1 if month < 12 else 1
-
     prev_year = year if month > 1 else year - 1
-
     next_year = year if month < 12 else year + 1
 
     month_names = [
-
         "", "Январь", "Февраль", "Март", "Апрель", "Май",
-
         "Июнь", "Июль", "Август", "Сентябрь",
-
         "Октябрь", "Ноябрь", "Декабрь"
-
     ]
 
     return TemplateResponse(request, "admin/user_page.html", {
-
         **admin_site.each_context(request),
 
-        # 👤 user
-
         "user_obj": user,
-
         "student": student,
-
         "groups": groups,
 
-        "balance": balance_obj.balance,
+        # 🔥 XP
+        "total_xp": total_xp,
+        "level": level,
+        "xp_progress": xp_progress,
 
-        # 🎟 subscription
-
+        # subscription
         "active_subscription": active_subscription,
-
         "total_lessons": total,
-
         "used_lessons": used,
-
         "remaining_lessons": remaining,
-
         "debt": debt,
 
-        # 📅 attendance
-
+        # attendance
         "lessons": lessons,
-
         "days": days,
-
         "attendance_map": attendance_map,
-
         "today": today,
-
         "attendance_stats": attendance_stats,
 
-        # 🔁 navigation
-
+        # nav
         "current_month": month,
-
         "current_year": year,
-
         "current_month_name": month_names[month],
-
         "prev_month": prev_month,
-
         "next_month": next_month,
-
         "prev_year": prev_year,
-
         "next_year": next_year,
-
     })
 
 def create_subscription_view(admin_site, request, user_id):
@@ -286,31 +204,22 @@ def set_attendance(admin_site, request):
         defaults={"status": status}
     )
 
-    # 🔥 старый статус
-    old_status = attendance.status if not created else None
-
     attendance.status = status
 
-    # =========================
-    # 💰 ЛОГИКА СПИСАНИЯ
-    # =========================
-
     if status in ["present", "late"]:
-
-        # если ещё не списано — списываем
         if not attendance.is_paid:
-
             subscription = student.subscriptions.filter(is_active=True).first()
 
             if subscription:
                 subscription.use_lesson()
 
+            # 🔥 XP начисление
+            add_xp(student.user, 10)
+
             attendance.is_paid = True
 
     else:
-        # если стало "отсутствовал" → откатываем оплату
         if attendance.is_paid:
-
             subscription = student.subscriptions.filter(is_active=True).first()
 
             if subscription:
@@ -320,8 +229,8 @@ def set_attendance(admin_site, request):
             attendance.is_paid = False
 
     attendance.save()
-
     return redirect(request.META.get("HTTP_REFERER", "/admin/"))
+
 def apply_subscription(student, attendance):
     """
     Списывает занятие с последнего активного абонемента
@@ -353,7 +262,20 @@ def students_list_view(request, admin_site):
     age = request.GET.get("age")
     group_id = request.GET.get("group")
 
-    students = StudentProfile.objects.select_related("user").prefetch_related("enrollments__group")
+    students = StudentProfile.objects.select_related("user").prefetch_related(
+        "enrollments__group",
+        "subscriptions"
+    )
+
+    for s in students:
+        active_sub = s.subscriptions.filter(is_active=True).first()
+
+        if active_sub:
+            s.debt_value = max(active_sub.used_lessons - active_sub.total_lessons, 0)
+            s.has_debt = s.debt_value > 0
+        else:
+            s.debt_value = 0
+            s.has_debt = False
 
     if age:
         students = students.filter(age=age)
@@ -361,14 +283,11 @@ def students_list_view(request, admin_site):
     if group_id:
         students = students.filter(enrollments__group_id=group_id)
 
-    groups = Group.objects.all()
-    ages = list(range(6, 19))
-
     return TemplateResponse(request, "admin/students_list.html", {
         **admin_site.each_context(request),
         "students": students,
-        "groups": groups,
-        "ages": ages,
+        "groups": Group.objects.all(),
+        "ages": list(range(6, 19)),
         "selected_age": age,
         "selected_group": group_id,
     })
@@ -587,12 +506,12 @@ def delete_lesson(admin_site, request, lesson_id):
 # =========================
 # COINS
 # =========================
-def add_coins_view(admin_site, request, user_id):
+def add_xp_view(admin_site, request, user_id):
     user = get_object_or_404(User, id=user_id)
 
     if request.method == "POST":
         amount = int(request.POST.get("amount", 0))
-        add_coins(user, amount)
+        add_xp(user, amount)
 
     return HttpResponseRedirect(f"/admin/user/{user_id}/")
 

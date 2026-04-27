@@ -1,51 +1,140 @@
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-
+from apps.students.models import Experience
 from apps.schedule.models import Lesson, Group
-from apps.students.models import CoinBalance, StudentProfile
 
 
 @login_required
 def dashboard(request):
     user = request.user
 
-    balance = CoinBalance.get_for_user(user)
+    balance_obj = Experience.get_for_user(user)
 
-    # 🔥 через Enrollment → StudentProfile
-    try:
-        student_profile = user.student_profile
-    except StudentProfile.DoesNotExist:
-        student_profile = None
+    student = getattr(user, "student_profile", None)
 
-    if student_profile:
+    lessons = []
+
+    groups = []
+
+    subscription = None
+
+    recent_attendance = []
+
+    used = 0
+
+    total = 0
+
+    remaining = 0
+
+    debt = 0
+
+    progress = 0
+
+    streak = 0
+
+    if student:
+
         lessons = (
+
             Lesson.objects
-            .filter(group__enrollments__student=student_profile)
-            .select_related('group')
+
+            .filter(group__enrollments__student=student)
+
+            .select_related("group")
+
             .distinct()
-            .order_by('weekday', 'time')
+
+            .order_by("weekday", "time")
+
         )
 
         groups = (
+
             Group.objects
-            .filter(enrollments__student=student_profile)
+
+            .filter(enrollments__student=student)
+
             .distinct()
+
         )
-    else:
-        lessons = Lesson.objects.none()
-        groups = Group.objects.none()
 
-    return render(request, 'dashboard/dashboard.html', {
+        subscription = (
+
+            student.subscriptions
+
+            .filter(is_active=True)
+
+            .order_by("-created_at")
+
+            .first()
+
+        )
+
+        if subscription:
+
+            used = subscription.used_lessons
+
+            total = subscription.total_lessons
+
+            remaining = max(total - used, 0)
+
+            debt = max(used - total, 0)
+
+            # ✅ НОРМАЛЬНЫЙ ПРОГРЕСС
+
+            if total > 0:
+                progress = 100 - round((total / used) * 100, 1)
+
+        # =========================
+
+        # 📊 ATTENDANCE
+
+        # =========================
+
+        attendances = student.attendances.order_by("-date")
+
+        recent_attendance = attendances[:12][::-1]
+
+        # streak (подряд present/late начиная с последнего дня)
+
+        for att in attendances:
+
+            if att.status in ["present", "late"]:
+
+                streak += 1
+
+            else:
+
+                break
+
+    return render(request, "dashboard/dashboard.html", {
+
         "user": user,
-        "balance": balance.balance,
+
+        "balance": balance_obj.total_xp,
+
         "groups": groups,
+
         "lessons": lessons,
+
+        "subscription": subscription,
+
+        "used": used,
+
+        "total": total,
+
+        "remaining": remaining,
+
+        "debt": debt,
+
+        "progress": progress,  # 🔥 ВАЖНО
+
+        "recent_attendance": recent_attendance,
+
+        "streak": streak,
+
     })
-
-
-from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render, redirect
 
 
 def user_login(request):

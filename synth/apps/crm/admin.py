@@ -3,7 +3,8 @@ from django.contrib import admin
 from apps.students.models import (
     StudentProfile,
     Enrollment,
-    CoinBalance,
+    Experience,
+    ExperienceLog,
     Transaction,
     Subscription,
     Attendance
@@ -18,7 +19,8 @@ admin.site.register(User)
 admin.site.register(StudentProfile)
 admin.site.register(Enrollment)
 
-admin.site.register(CoinBalance)
+admin.site.register(Experience)
+admin.site.register(ExperienceLog)
 admin.site.register(Transaction)
 admin.site.register(Subscription)
 admin.site.register(Attendance)

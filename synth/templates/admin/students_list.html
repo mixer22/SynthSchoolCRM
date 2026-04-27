@@ -79,26 +79,52 @@ h1 { margin-bottom: 10px; }
     background: #fee2e2;
     color: #991b1b;
 }
+
+/* 🔴 debt badge */
+.debt {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ok {
+    background: #ecfccb;
+    color: #365314;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.warn {
+    background: #fef9c3;
+    color: #854d0e;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+}
 </style>
 
 <div class="container">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h1>👤 Ученики</h1>
 
-    <h1>👤 Ученики</h1>
-
-    <a href="/admin/students/create/" style="
-        padding:10px 16px;
-        background:#22c55e;
-        color:white;
-        border-radius:10px;
-        text-decoration:none;
-        font-weight:600;
-        font-size:14px;
-    ">
-        ➕ Добавить ученика
-    </a>
-
+        <a href="/admin/students/create/" style="
+            padding:10px 16px;
+            background:#22c55e;
+            color:white;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:600;
+            font-size:14px;
+        ">
+            ➕ Добавить ученика
+        </a>
     </div>
 
     <!-- FILTERS -->
@@ -123,7 +149,6 @@ h1 { margin-bottom: 10px; }
         </select>
 
         <button type="submit">Фильтр</button>
-
     </form>
 
     <!-- TABLE -->
@@ -134,6 +159,7 @@ h1 { margin-bottom: 10px; }
             <th>Возраст</th>
             <th>Телефон родителя</th>
             <th>Группы</th>
+            <th>Долг</th>
             <th>Статус</th>
         </tr>
 
@@ -150,10 +176,8 @@ h1 { margin-bottom: 10px; }
             <!-- AGE -->
             <td>{{ student.age|default:"—" }}</td>
 
-            <!-- PARENT PHONE -->
-            <td>
-                {{ student.parent_phone|default:"—" }}
-            </td>
+            <!-- PHONE -->
+            <td>{{ student.parent_phone|default:"—" }}</td>
 
             <!-- GROUPS -->
             <td>
@@ -164,6 +188,18 @@ h1 { margin-bottom: 10px; }
                 {% endfor %}
             </td>
 
+            <!-- DEBT -->
+            <td>
+                {% if student.has_debt %}
+                    <span class="debt">⚠ {{ student.debt_value }}</span>
+                {% elif student.is_exhausted %}
+                    <span class="warn">Закончился</span>
+                {% else %}
+                    <span class="ok">OK</span>
+                {% endif %}
+            </td>
+
+            <!-- STATUS -->
             <td>
                 {% if student.user.is_active %}
                     <span class="badge active">Активен</span>
@@ -175,7 +211,7 @@ h1 { margin-bottom: 10px; }
         </tr>
         {% empty %}
         <tr>
-            <td colspan="4" class="muted">Нет учеников</td>
+            <td colspan="6" class="muted">Нет учеников</td>
         </tr>
         {% endfor %}
 

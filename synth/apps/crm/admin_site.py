@@ -51,8 +51,8 @@ class CustomAdminSite(admin.AdminSite):
             ),
 
             path(
-                'user/<int:user_id>/add-coins/',
-                self.admin_view(self.wrap(admin_views.add_coins_view))
+                'user/<int:user_id>/add-xp/',
+                self.admin_view(self.wrap(admin_views.add_xp_view))
             ),
 
             path(

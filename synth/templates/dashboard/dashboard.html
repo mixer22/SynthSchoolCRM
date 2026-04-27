@@ -1,155 +1,213 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Кабинет | СИНТ</title>
+<meta charset="UTF-8">
+<title>Кабинет</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background: radial-gradient(circle at top, #eef2ff, #ffffff);
-            color: #111827;
-        }
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        .container {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 20px;
-        }
+<style>
+    body {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, Roboto;
+        background: radial-gradient(circle at top, #eef2ff 0%, #f8fafc 40%, #f1f5f9 100%);
+    }
 
-        /* HEADER */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
+    .glass {
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,0.4);
+    }
 
-        .hello {
-            font-size: 28px;
-            font-weight: 600;
-        }
+    .soft-shadow {
+        box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+    }
 
-        .logout {
-            text-decoration: none;
-            color: #ef4444;
-            font-weight: 500;
-        }
+    .chart-wrap {
+        position: relative;
+        width: 140px;
+        height: 140px;
+    }
 
-        /* CARDS */
-        .card {
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(20px);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .title {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 10px;
-        }
-
-        /* PROFILE */
-        .profile p {
-            margin: 6px 0;
-            font-size: 15px;
-        }
-
-        /* BALANCE */
-        .balance {
-            font-size: 36px;
-            font-weight: 700;
-            color: #4f46e5;
-        }
-
-        .coins {
-            font-size: 14px;
-            color: #6b7280;
-        }
-
-        /* SCHEDULE */
-        .schedule {
-            margin-top: 20px;
-        }
-
-        .lesson {
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: 600;
-            text-align: center;
-            background: #f9fafb;
-            margin-bottom: 10px;
-        }
-
-        .empty {
-            color: #9ca3af;
-            padding: 10px 0;
-            text-align: center;
-        }
-
-    </style>
+    .chart-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+    }
+</style>
 </head>
 
-<body>
+<body class="min-h-screen">
 
-<div class="container">
+<div class="max-w-6xl mx-auto p-8">
 
     <!-- HEADER -->
-    <div class="header">
-        <div class="hello">
-           Привет, {{ user.first_name|default:user.username }} 👋
+    <div class="flex justify-between items-center mb-10">
+
+        <div>
+            <h1 class="text-4xl font-semibold text-slate-900">
+                Добро пожаловать, {{ user.first_name|default:user.username }}
+            </h1>
+            <p class="text-slate-500 mt-1">
+                Личный кабинет · Прогресс обучения
+            </p>
         </div>
 
-        <a href="/logout/" class="logout">Выйти</a>
+        <a href="/logout/"
+           class="px-5 py-2 rounded-xl glass soft-shadow text-slate-700 hover:scale-[1.03] transition">
+            Выйти
+        </a>
     </div>
 
-    <!-- TOP -->
-    <div class="grid">
+    <!-- 🎟 SUBSCRIPTION -->
+    <div class="glass soft-shadow rounded-3xl p-8 mb-8 flex items-center justify-between relative
+        {% if debt > 0 or remaining == 0 %}bg-red-50 border border-red-200{% endif %}">
 
-        <!-- PROFILE -->
-        <div class="card profile">
-            <div class="title">Данные профиля</div>
+        {% if debt > 0 or remaining == 0 %}
+            <div class="absolute left-0 top-0 bottom-0 w-2 bg-red-500 rounded-l-3xl"></div>
+        {% endif %}
 
-            <p><b>Имя:</b> {{ user.first_name|default:"—" }}</p>
-            <p><b>Фамилия:</b> {{ user.last_name|default:"—" }}</p>
-            <p><b>Телефон:</b> {{ user.phone|default:"—" }}</p>
+        <!-- TEXT -->
+        <div>
+            <div class="text-sm text-slate-500">Абонемент</div>
+
+            <div class="text-3xl font-semibold mt-1
+                {% if debt > 0 or remaining == 0 %}text-red-600{% else %}text-slate-900{% endif %}">
+
+                {% if subscription %}
+                    {{ remaining }} занятий осталось
+                {% else %}
+                    Нет активного абонемента
+                {% endif %}
+            </div>
+
+            {% if debt > 0 %}
+                <div class="mt-3 text-sm text-red-500 font-medium">
+                    ⚠ Долг: {{ debt }} занятий
+                </div>
+            {% elif remaining == 0 and subscription %}
+                <div class="mt-3 text-sm text-red-500 font-medium">
+                    ⛔ Занятия закончились
+                </div>
+            {% else %}
+                <div class="mt-3 text-sm text-green-600 font-medium">
+                    ✔ Абонемент активен
+                </div>
+            {% endif %}
         </div>
 
-        <!-- BALANCE -->
-        <div class="card">
-            <div class="title">Монетки</div>
+        <!-- DONUT -->
+        <div class="chart-wrap">
+            <canvas id="subscriptionChart"></canvas>
 
-            <div class="balance">{{ balance }}</div>
-            <div class="coins">монеток</div>
+            {% if subscription %}
+            <div class="chart-center">
+                <div class="text-lg font-bold text-slate-800">
+                    {{ used }}/{{ total }}
+                </div>
+                <div class="text-xs text-slate-400">
+                    использовано
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- BALANCE -->
+        <div class="glass soft-shadow rounded-3xl p-6">
+            <div class="text-sm text-slate-500">Баланс</div>
+            <div class="text-4xl font-bold text-slate-900 mt-2">
+                {{ balance|default:0 }}
+            </div>
+        </div>
+
+        <!-- ACTIVITY -->
+        <div class="glass soft-shadow rounded-3xl p-6">
+
+            <div class="text-sm text-slate-500 mb-3">Активность</div>
+
+            <div class="flex flex-wrap gap-2">
+                {% for a in recent_attendance %}
+                    <div class="px-3 py-1 rounded-xl text-xs font-medium
+                        {% if a.status == 'present' %}bg-green-100 text-green-700
+                        {% elif a.status == 'late' %}bg-yellow-100 text-yellow-700
+                        {% elif a.status == 'absent' %}bg-red-100 text-red-700
+                        {% else %}bg-slate-100 text-slate-500{% endif %}
+                    ">
+                        {{ a.date|date:"d.m" }}
+                    </div>
+                {% empty %}
+                    <div class="text-slate-400 text-sm">Нет данных</div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4 text-sm text-slate-400">
+                🔥 Подряд: {{ streak|default:0 }} посещений
+            </div>
+
         </div>
 
     </div>
 
     <!-- SCHEDULE -->
-    <div class="card schedule">
-        <div class="title">Расписание</div>
+    <div class="mt-6 glass soft-shadow rounded-3xl p-6">
 
-        {% for l in lessons %}
-            <div class="lesson">
-                {{ l.get_weekday_display }} • {{ l.time|time:"H:i" }}
-            </div>
-        {% empty %}
-            <div class="empty">Пока нет занятий</div>
-        {% endfor %}
+        <div class="text-sm text-slate-500 mb-4">Расписание</div>
+
+        <div class="space-y-2">
+            {% for l in lessons %}
+                <div class="flex justify-between items-center p-4 rounded-2xl bg-white/60">
+                    <span class="font-medium text-slate-800">
+                        {{ l.get_weekday_display }}
+                    </span>
+                    <span class="text-sm text-slate-500">
+                        {{ l.time|time:"H:i" }}
+                    </span>
+                </div>
+            {% empty %}
+                <div class="text-slate-400 text-sm">Пока нет занятий</div>
+            {% endfor %}
+        </div>
+
     </div>
 
 </div>
+
+<!-- 📊 CHART -->
+{% if subscription %}
+<script>
+const used = {{ used }};
+const total = {{ total }};
+const remaining = Math.max(total - used, 0);
+
+new Chart(document.getElementById('subscriptionChart'), {
+    type: 'doughnut',
+    data: {
+        datasets: [{
+            data: [used, remaining],
+            backgroundColor: ['#6366f1', '#e2e8f0'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        cutout: '75%',
+        plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+        }
+    }
+});
+</script>
+{% endif %}
 
 </body>
 </html>
