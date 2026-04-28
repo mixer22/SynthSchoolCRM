@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="max-w-4xl mx-auto mt-10">
+
+    <h1 class="text-3xl font-bold mb-6">
+        Уровень {{ level }}
+    </h1>
+
+    <div class="grid gap-4">
+
+        {% for lvl, reward in rewards.items %}
+            <div class="p-4 rounded-2xl
+                {% if level >= lvl %}
+                    bg-green-100
+                {% elif level == lvl %}
+                    bg-indigo-100 ring-2 ring-indigo-400
+                {% else %}
+                    bg-slate-100
+                {% endif %}
+            ">
+
+                <div class="flex justify-between items-center">
+                    <div>Уровень {{ lvl }}</div>
+                    <div>{{ reward }}</div>
+                </div>
+
+            </div>
+        {% endfor %}
+
+    </div>
+
+</div>
+</body>
+</html>

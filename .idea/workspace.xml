@@ -4,16 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="165d161f-a06e-49f1-b0ee-3cc307a2112d" name="Changes" comment="version 4.5&#10;fixed bags&#10;added stats page">
+    <list default="true" id="165d161f-a06e-49f1-b0ee-3cc307a2112d" name="Changes" comment="version 4.7">
+      <change afterPath="$PROJECT_DIR$/synth/templates/dashboard/levels.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/synth/templates/dashboard/payment.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synth/apps/crm/admin.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/crm/admin.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synth/apps/crm/admin_site.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/crm/admin_site.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synth/apps/crm/services/coins.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/crm/services/exp.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synth/apps/crm/views/admin_views.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/crm/views/admin_views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/synth/apps/crm/views/main_views.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/crm/views/main_views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synth/apps/students/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/apps/students/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synth/templates/admin/students_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/synth/templates/admin/students_list.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/synth/templates/admin/user_page.html" beforeDir="false" afterPath="$PROJECT_DIR$/synth/templates/admin/user_page.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/synth/config/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/synth/config/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/synth/templates/dashboard/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/synth/templates/dashboard/dashboard.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -149,7 +145,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776772200452</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="version 4.7">
+      <option name="closed" value="true" />
+      <created>1777266852133</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1777266852133</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -159,6 +163,7 @@
     <MESSAGE value="version 3.0&#10;schedule, students management, groups and lessons done" />
     <MESSAGE value="version 4.0&#10;added subscriptions" />
     <MESSAGE value="version 4.5&#10;fixed bags&#10;added stats page" />
-    <option name="LAST_COMMIT_MESSAGE" value="version 4.5&#10;fixed bags&#10;added stats page" />
+    <MESSAGE value="version 4.7" />
+    <option name="LAST_COMMIT_MESSAGE" value="version 4.7" />
   </component>
 </project>

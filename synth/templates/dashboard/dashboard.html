@@ -65,12 +65,16 @@
     </div>
 
     <!-- 🎟 SUBSCRIPTION -->
-    <div class="glass soft-shadow rounded-3xl p-8 mb-8 flex items-center justify-between relative
-        {% if debt > 0 or remaining == 0 %}bg-red-50 border border-red-200{% endif %}">
+    <!-- 🎟 SUBSCRIPTION -->
+<div class="glass soft-shadow rounded-3xl p-8 mb-8 relative
+    {% if debt > 0 or remaining == 0 %}bg-red-50 border border-red-200{% endif %}">
 
-        {% if debt > 0 or remaining == 0 %}
-            <div class="absolute left-0 top-0 bottom-0 w-2 bg-red-500 rounded-l-3xl"></div>
-        {% endif %}
+    {% if debt > 0 or remaining == 0 %}
+        <div class="absolute left-0 top-0 bottom-0 w-2 bg-red-500 rounded-l-3xl"></div>
+    {% endif %}
+
+    <!-- TOP CONTENT -->
+    <div class="flex items-center justify-between">
 
         <!-- TEXT -->
         <div>
@@ -119,16 +123,81 @@
 
     </div>
 
+    <!-- ACTION BAR (ВНИЗУ) -->
+    <div class="mt-6 pt-5 border-t border-slate-200 flex gap-3">
+
+        <a href="/payment/"
+           class="flex-1 text-center px-4 py-3 rounded-xl bg-indigo-500 text-white
+                  hover:bg-indigo-600 transition font-medium">
+            💳 Оплата
+        </a>
+    </div>
+
+</div>
+
+
     <!-- GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <!-- BALANCE -->
-        <div class="glass soft-shadow rounded-3xl p-6">
-            <div class="text-sm text-slate-500">Баланс</div>
-            <div class="text-4xl font-bold text-slate-900 mt-2">
-                {{ balance|default:0 }}
-            </div>
+
+    <!-- XP -->
+<!-- XP -->
+<div class="glass soft-shadow rounded-3xl p-6">
+
+    <div class="text-sm text-slate-500">Опыт</div>
+
+    <!-- LEVEL -->
+    <div class="flex items-end justify-between mt-2">
+        <div class="text-4xl font-bold text-slate-900">
+            {{ balance|default:0 }}
         </div>
+
+        <div class="text-sm text-slate-500">
+            Уровень {{ level }}
+        </div>
+    </div>
+
+
+    <!-- PROGRESS BAR -->
+<div class="mt-6 relative">
+
+    <!-- BAR -->
+    <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden relative">
+
+        <div class="h-full rounded-full
+            bg-gradient-to-r from-indigo-500 to-purple-500
+            transition-all duration-700"
+            style="width: {{ xp_percent }}%;">
+        </div>
+
+        <!-- 🚀 ROCKET -->
+        <div class="absolute top-1/2 -translate-y-1/2
+                    transition-all duration-700"
+             style="left: calc({{ xp_percent }}% - 10px);">
+
+            <div class="text-lg">
+                🚀
+            </div>
+
+        </div>
+
+    </div>
+
+        <!-- LABELS -->
+        <div class="flex justify-between text-xs text-slate-400 mt-2">
+            <span>{{ xp_in_level }}/1000 XP</span>
+            <span>до уровня: {{ xp_left }}</span>
+        </div>
+        <div class="mt-6 pt-5 border-t border-slate-200 flex gap-3">
+            <a href="/levels/"
+           class="flex-1 text-center px-4 py-3 rounded-xl bg-slate-100 text-slate-700
+                  hover:bg-slate-200 transition font-medium">
+            🏆 Прогресс и достижения
+        </a>
+    </div>
+</div>
+
+</div>
 
         <!-- ACTIVITY -->
         <div class="glass soft-shadow rounded-3xl p-6">
@@ -158,27 +227,62 @@
 
     </div>
 
+        <!-- SCHEDULE -->
     <!-- SCHEDULE -->
-    <div class="mt-6 glass soft-shadow rounded-3xl p-6">
+<div class="mt-6 glass soft-shadow rounded-3xl p-6">
 
-        <div class="text-sm text-slate-500 mb-4">Расписание</div>
-
-        <div class="space-y-2">
-            {% for l in lessons %}
-                <div class="flex justify-between items-center p-4 rounded-2xl bg-white/60">
-                    <span class="font-medium text-slate-800">
-                        {{ l.get_weekday_display }}
-                    </span>
-                    <span class="text-sm text-slate-500">
-                        {{ l.time|time:"H:i" }}
-                    </span>
-                </div>
-            {% empty %}
-                <div class="text-slate-400 text-sm">Пока нет занятий</div>
-            {% endfor %}
-        </div>
-
+    <div class="flex justify-between items-center mb-5">
+        <div class="text-sm text-slate-500">Расписание</div>
     </div>
+
+    <div class="space-y-3">
+        {% for l in lessons %}
+            <div class="relative flex items-center justify-between p-4 rounded-2xl
+                        bg-white border border-slate-100
+                        hover:shadow-md hover:scale-[1.01]
+                        transition">
+
+                <!-- LEFT ACCENT -->
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-indigo-500 rounded-l-2xl"></div>
+
+                <!-- LEFT: DAY -->
+                <div class="flex items-center gap-4 ml-2">
+
+                    <!-- circle -->
+                    <div class="w-10 h-10 flex items-center justify-center
+                                rounded-full bg-indigo-100 text-indigo-600
+                                font-semibold text-sm">
+                        {{ l.get_weekday_display|slice:":2" }}
+                    </div>
+
+                    <div>
+                        <div class="text-sm font-semibold text-slate-800">
+                            Занятие
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT: TIME -->
+                <div class="text-right">
+                    <div class="text-xl font-bold text-indigo-600">
+                        {{ l.time|time:"H:i" }}
+                    </div>
+                    <div class="text-xs text-slate-400">
+                        время
+                    </div>
+                </div>
+
+            </div>
+
+        {% empty %}
+            <div class="text-center py-10 text-slate-400 text-sm">
+                📭 Пока нет занятий
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
 
 </div>
 
@@ -193,7 +297,7 @@ new Chart(document.getElementById('subscriptionChart'), {
     type: 'doughnut',
     data: {
         datasets: [{
-            data: [used, remaining],
+            data: [remaining, used],
             backgroundColor: ['#6366f1', '#e2e8f0'],
             borderWidth: 0
         }]

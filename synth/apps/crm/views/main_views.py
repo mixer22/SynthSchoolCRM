@@ -11,6 +11,13 @@ def dashboard(request):
 
     balance_obj = Experience.get_for_user(user)
 
+    total_xp = balance_obj.total_xp if balance_obj else 0
+
+    level = total_xp // 1000
+    xp_in_level = total_xp % 1000
+    xp_percent = int((xp_in_level / 1000) * 100) if total_xp else 0
+    xp_left = 1000 - xp_in_level
+
     student = getattr(user, "student_profile", None)
 
     lessons = []
@@ -84,7 +91,7 @@ def dashboard(request):
             # ✅ НОРМАЛЬНЫЙ ПРОГРЕСС
 
             if total > 0:
-                progress = 100 - round((total / used) * 100, 1)
+                progress = int((used / total) * 100)
 
         # =========================
 
@@ -112,28 +119,64 @@ def dashboard(request):
 
         "user": user,
 
-        "balance": balance_obj.total_xp,
+        "balance": total_xp,
+
+        "level": level,
+        "xp_in_level": xp_in_level,
+        "xp_percent": xp_percent,
+        "xp_left": xp_left,
 
         "groups": groups,
-
         "lessons": lessons,
 
         "subscription": subscription,
 
         "used": used,
-
         "total": total,
-
         "remaining": remaining,
-
         "debt": debt,
 
-        "progress": progress,  # 🔥 ВАЖНО
+        "progress": progress,
 
         "recent_attendance": recent_attendance,
-
         "streak": streak,
+    })
 
+LEVEL_REWARDS = {
+    1: "🎉 Старт",
+    5: "🍫 Сладость",
+    10: "🎁 Стикеры",
+    20: "👕 Мерч",
+    30: "🎓 Сертификат",
+}
+
+@login_required
+def levels_page(request):
+    user = request.user
+    xp = Experience.get_for_user(user)
+
+    total_xp = xp.total_xp if xp else 0
+    level = total_xp // 1000
+
+    return render(request, "dashboard/levels.html", {
+        "level": level,
+        "total_xp": total_xp,
+        "rewards": LEVEL_REWARDS
+    })
+
+@login_required
+def payment_page(request):
+    student = request.user.student_profile
+
+    subscription = (
+        student.subscriptions
+        .filter(is_active=True)
+        .order_by("-created_at")
+        .first()
+    )
+
+    return render(request, "dashboard/payment.html", {
+        "subscription": subscription
     })
 
 
